@@ -39,6 +39,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
 
+        <lombok.version>1.18.38</lombok.version>
+
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
@@ -75,7 +77,7 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>RELEASE</version>
+                <version>${lombok.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
@@ -170,6 +172,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -209,7 +212,7 @@
 
     <profiles>
         <!--
-          Release profile: attaches sources, javadoc, GPG signs artifacts,
+          Release profile: attaches sources and javadoc, GPG signs artifacts,
           and publishes to Maven Central via the Central Publishing plugin.
           Activate with: mvn deploy -P release
           Requires: GPG key and Central Portal token configured.
@@ -222,6 +225,13 @@
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok-maven-plugin</artifactId>
                         <version>1.18.20.0</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </dependency>
+                        </dependencies>
                         <executions>
                             <execution>
                                 <phase>generate-sources</phase>
@@ -231,6 +241,7 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
                             <addOutputDirectory>false</addOutputDirectory>
                             <outputDirectory>${project.build.directory}/delombok</outputDirectory>
                         </configuration>
@@ -263,6 +274,7 @@
                         <configuration>
                             <doclint>none</doclint>
                             <sourcepath>${project.build.directory}/delombok</sourcepath>
+                            <failOnError>true</failOnError>
                         </configuration>
                     </plugin>
                     <plugin>
