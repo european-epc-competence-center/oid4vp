@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-12
+
 ### Fixed
 
 - Fix Maven Central publishing: release profile now generates and attaches the Javadoc JAR required by Sonatype Central
 - Pin Lombok to 1.18.38 for JDK 25 compatibility in the delombok step used before Javadoc generation
 - Configure `lombok-maven-plugin` to delombok from `src/main/java` instead of the default `src/main/lombok` path, which caused delombok to be skipped and no Javadoc artifact to be published
-
 ## [0.1.0] - 2026-06-12
 
 ### Added
