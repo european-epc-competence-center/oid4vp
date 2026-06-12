@@ -119,7 +119,7 @@ mvn package
 
 ```
 oid4vp-java/
-├── src/main/java/de/eecc/oid4vp/
+├── src/main/java/de/eecc/oid4vc/oid4vp/
 │   ├── api/                 # Public API: Oid4Vp, *Options, DirectPostHandler
 │   ├── request/             # PresentationRequest, PublicPresentationRequest, PresentationRequestDefinition
 │   │   └── template/        # Built-in presentation request templates (e.g. gs1)
@@ -130,7 +130,7 @@ oid4vp-java/
 │   ├── Constants.java       # Protocol constants
 │   ├── DcqlQuery.java       # DCQL models
 │   └── ...
-└── src/test/java/de/eecc/oid4vp/
+└── src/test/java/de/eecc/oid4vc/oid4vp/
 ```
 
 ## Repository Overview
