@@ -51,8 +51,12 @@ mvn package
 Release workflow (from repo root):
 
 ```bash
-npm run release patch   # or minor / major
+npm run release patch   # 0.1.0-SNAPSHOT -> 0.1.0 -> 0.1.1-SNAPSHOT
+npm run release minor   # 0.1.0-SNAPSHOT -> 0.2.0 -> 0.2.1-SNAPSHOT
+npm run release major   # 0.1.0-SNAPSHOT -> 1.0.0 -> 1.0.1-SNAPSHOT
 ```
+
+Maven versioning follows the company-wallet pattern: **patch** strips `-SNAPSHOT` only, **minor/major** bump from the base version. After tagging, the script commits the next patch `-SNAPSHOT` version.
 
 See `.cursor/rules/changelog-conventions.mdc` for changelog rules. Add entries under `## [Unreleased]` before running the release script.
 
