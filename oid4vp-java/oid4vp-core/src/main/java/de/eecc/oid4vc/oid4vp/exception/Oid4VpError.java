@@ -9,6 +9,7 @@ public sealed interface Oid4VpError permits
         AlreadyConsumed,
         InvalidVpToken,
         VerificationFailed,
+        EmptyPresentationClaims,
         InternalError {
 
     String message();

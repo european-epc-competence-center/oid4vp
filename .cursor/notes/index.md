@@ -32,7 +32,7 @@ See [module-layout.md](module-layout.md) for embedding patterns, pluggable depen
 - **Wallet URL building** with inline or `request_uri` transport
 - **Direct post handling** with optional `response_code` (`DirectPostResult`)
 - **Pluggable** repository and verifier; `Oid4Vp.builder()` for tests and host wiring
-- **DCQL query models**, GS1 template, `PresentationParser`, sealed `Oid4VpError`
+- **DCQL query models**, GS1 template, `PresentationParser`, `PresentationClaims` extraction via `PresentationRequestDefinition`, sealed `Oid4VpError`
 
 ## Development & Release
 

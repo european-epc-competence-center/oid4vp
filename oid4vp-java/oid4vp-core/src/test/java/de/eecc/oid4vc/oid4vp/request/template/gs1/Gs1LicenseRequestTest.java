@@ -170,7 +170,7 @@ class Gs1LicenseRequestTest {
                 }
                 """);
 
-        PresentationClaims claims = Gs1LicenseRequest.extractPresentationClaims(vpToken);
+        PresentationClaims claims = Gs1LicenseRequest.INSTANCE.extractPresentationClaims(vpToken);
 
         assertThat(claims.values()).containsExactly("095100");
         assertThat(claims.identifier()).isEqualTo("9501100000000");
@@ -192,7 +192,7 @@ class Gs1LicenseRequestTest {
                 }
                 """);
 
-        PresentationClaims claims = Gs1LicenseRequest.extractPresentationClaims(vpToken);
+        PresentationClaims claims = Gs1LicenseRequest.INSTANCE.extractPresentationClaims(vpToken);
 
         assertThat(claims.values()).containsExactly("095100", "40000951");
     }

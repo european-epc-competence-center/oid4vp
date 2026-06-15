@@ -85,11 +85,7 @@ PresentationRequestDefinition myDefinition = new PresentationRequestDefinition()
 PresentationRequest request = oid4Vp.generatePresentationRequest(myDefinition);
 ```
 
-After verification, add your own logic to read claims from the `vp_token` (see `PresentationParser` or the GS1 template below).
-
-#### Built-in template: GS1 License Presentation
-
-The library also ships a ready-made definition for GS1 Company Prefix and Prefix License credentials:
+After verification, extract claims via the same definition used to generate the request:
 
 ```java
 import de.eecc.oid4vc.oid4vp.PresentationClaims;
@@ -97,12 +93,16 @@ import de.eecc.oid4vc.oid4vp.request.PresentationRequest;
 import de.eecc.oid4vc.oid4vp.request.template.gs1.Gs1LicenseRequest;
 
 PresentationRequest request = oid4Vp.generatePresentationRequest(Gs1LicenseRequest.INSTANCE);
-String walletUrl = oid4Vp.toOpenId4VpUrl(request);
-
-// After direct_post verification:
-PresentationClaims claims = Gs1LicenseRequest.extractPresentationClaims(vpTokenNode);
+// ... after direct_post verification ...
+PresentationClaims claims = oid4Vp.extractPresentationClaims(Gs1LicenseRequest.INSTANCE, request);
 List<String> gcps = claims.values();
 ```
+
+Lower-level access: `definition.extractPresentationClaims(vpTokenNode)` or `PresentationParser` for format-specific parsing.
+
+#### Built-in template: GS1 License Presentation
+
+The library ships a ready-made definition for GS1 Company Prefix and Prefix License credentials (`Gs1LicenseRequest.INSTANCE`).
 
 Application-specific attributes (for example `purpose` or an organisation id) belong on a
 subclass of `PresentationRequest` and are never serialized to the wallet.

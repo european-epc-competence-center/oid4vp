@@ -139,7 +139,8 @@ public final class Gs1LicenseRequest implements PresentationRequestDefinition {
      * Extracts GCP and organisation metadata from a verified {@code vp_token}.
      * Organisation fields use the first GCP credential encountered.
      */
-    public static PresentationClaims extractPresentationClaims(JsonNode vpTokenNode) {
+    @Override
+    public PresentationClaims extractPresentationClaims(JsonNode vpTokenNode) {
         List<String> extractedGcps = new ArrayList<>();
         String firstOrganizationName = null;
         String firstPartyGln = null;

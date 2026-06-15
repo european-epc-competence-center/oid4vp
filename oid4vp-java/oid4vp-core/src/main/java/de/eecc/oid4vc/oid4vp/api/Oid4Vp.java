@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.Constants;
+import de.eecc.oid4vc.oid4vp.PresentationClaims;
 import de.eecc.oid4vc.oid4vp.request.PresentationRequest;
 import de.eecc.oid4vc.oid4vp.request.PresentationRequestDefinition;
 import de.eecc.oid4vc.oid4vp.request.PublicPresentationRequest;
 import de.eecc.oid4vc.oid4vp.VerificationStatus;
 import de.eecc.oid4vc.oid4vp.VpTokenResponse;
 import de.eecc.oid4vc.oid4vp.exception.AlreadyConsumed;
+import de.eecc.oid4vc.oid4vp.exception.EmptyPresentationClaims;
 import de.eecc.oid4vc.oid4vp.exception.ExpiredState;
 import de.eecc.oid4vc.oid4vp.exception.InternalError;
 import de.eecc.oid4vc.oid4vp.exception.InvalidVpToken;
@@ -340,6 +342,46 @@ public final class Oid4Vp {
 
     public java.util.List<Object> buildVerifierRequestBody(JsonNode presentationNode) {
         return verifier.buildVerifierRequestBody(presentationNode);
+    }
+
+    /**
+     * Extracts presentation claims from the {@code vp_token} stored on a verified request.
+     *
+     * @throws Oid4VpException with {@link InvalidVpToken} when the stored token is missing or invalid JSON
+     * @throws Oid4VpException with {@link EmptyPresentationClaims} when {@link PresentationClaims#values()} is empty
+     */
+    public PresentationClaims extractPresentationClaims(
+            PresentationRequestDefinition definition, PresentationRequest request) {
+        String vpToken = request.getVpToken();
+        if (vpToken == null || vpToken.isBlank()) {
+            throw new Oid4VpException(new InvalidVpToken("No vp_token on presentation request"));
+        }
+        return extractPresentationClaims(definition, vpToken);
+    }
+
+    /**
+     * Extracts presentation claims from a verified {@code vp_token} JSON string.
+     *
+     * @throws Oid4VpException with {@link InvalidVpToken} when JSON parsing fails
+     * @throws Oid4VpException with {@link EmptyPresentationClaims} when {@link PresentationClaims#values()} is empty
+     */
+    public PresentationClaims extractPresentationClaims(
+            PresentationRequestDefinition definition, String vpToken) {
+        return extractPresentationClaims(definition, parseVpToken(vpToken));
+    }
+
+    /**
+     * Extracts presentation claims from a parsed {@code vp_token}.
+     *
+     * @throws Oid4VpException with {@link EmptyPresentationClaims} when {@link PresentationClaims#values()} is empty
+     */
+    public PresentationClaims extractPresentationClaims(
+            PresentationRequestDefinition definition, JsonNode vpTokenNode) {
+        PresentationClaims claims = definition.extractPresentationClaims(vpTokenNode);
+        if (claims.values().isEmpty()) {
+            throw new Oid4VpException(new EmptyPresentationClaims());
+        }
+        return claims;
     }
 
     private JsonNode parseVpToken(String vpToken) {
