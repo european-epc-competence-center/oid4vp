@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-15
+
 ### Added
 
 - Multi-module Maven layout: `oid4vp-core` (`de.eecc.oid4vc:oid4vp`), `oid4vp-spring`, `oid4vp-spring-boot-starter`
@@ -27,7 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed duplicate `de.eecc.oid4vp.*` package tree; canonical package is `de.eecc.oid4vc.oid4vp.*`
 - Renamed `PresentationRequestStore` → `CaffeinePresentationRequestRepository`, `VerifierClient` → `HttpPresentationVerifier`
 - Pinned Jackson to `${jackson.version}` (2.18.3) to avoid `RELEASE` version skew at test runtime
-
 ## [0.1.1] - 2026-06-12
 
 ### Fixed
