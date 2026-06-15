@@ -7,7 +7,7 @@
     <parent>
         <groupId>de.eecc.oid4vc</groupId>
         <artifactId>oid4vp-parent</artifactId>
-        <version>0.4.2</version>
+        <version>0.4.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>oid4vp-spring</artifactId>
