@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-06-15
+
+### Changed
+
+- **Breaking:** Merged `authorizationRequestTtl` into `requestTtl` on `Oid4VpOptions` and `Oid4VpProperties`; one TTL now controls both request expiry (`expiresAt`) and the default Caffeine repository eviction
 ## [0.4.1] - 2026-06-15
 
 ### Fixed
