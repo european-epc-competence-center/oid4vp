@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-15
+
 ### Added
 
 - `PresentationRequestDefinition.extractPresentationClaims(JsonNode)` for template-specific claim extraction from verified `vp_token` responses
 - `Oid4Vp.extractPresentationClaims(...)` helpers to parse stored tokens and validate primary claim values
 - `EmptyPresentationClaims` error (HTTP 401) when extracted `PresentationClaims.values()` is empty
-
 ## [0.4.3] - 2026-06-15
 
 - merge ttl into one property
