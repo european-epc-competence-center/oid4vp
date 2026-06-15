@@ -9,13 +9,17 @@ Java library for generating and processing [OpenID4VP](https://openid.net/specs/
 
 ## Installation
 
+Include the corresponding maven dependency in your pom like
+
 ```xml
 <dependency>
   <groupId>de.eecc.oid4vc</groupId>
   <artifactId>oid4vp</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.5.0</version>
 </dependency>
 ```
+
+Check [Maven](https://mvnrepository.com/artifact/de.eecc.oid4vc/oid4vp/versions) for the latest package version.
 
 ## Quick Start
 
@@ -60,7 +64,7 @@ String walletUrl = oid4Vp.toOpenId4VpUrl(request);
 
 ### Presentation Request Definitions
 
-A presentation request definition describes **what** the verifier asks for: a [DCQL](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html) query (credential types, formats, claim paths) and optional `client_metadata`. Transport fields such as nonce, state, and response URI are added by `Oid4Vp`.
+A presentation request definition describes **what** the verifier asks for: a [DCQL](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html#name-digital-credentials-query-l) query (credential types, formats, claim paths) and optional `client_metadata`. Transport fields such as nonce, state, and response URI are added by `Oid4Vp`.
 
 Implement `PresentationRequestDefinition` and pass it to `generatePresentationRequest`:
 
@@ -74,7 +78,7 @@ PresentationRequestDefinition myDefinition = new PresentationRequestDefinition()
     public DcqlQuery.Query dcqlQuery() {
         return new DcqlQuery.Query(List.of(
                 new DcqlQuery.CredentialQuery(
-                        "my_credential",
+                        "my_credential_query_id",
                         Constants.VP_FORMAT_JWT_VC_JSON,
                         Map.of("type_values", List.of(List.of("VerifiableCredential", "MyCredentialType"))),
                         List.of(new DcqlQuery.ClaimsQuery("email", List.of("email"))),
@@ -123,7 +127,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import de.eecc.oid4vc.oid4vp.PresentationClaims;
 import de.eecc.oid4vc.oid4vp.VpTokenResponse;
 import de.eecc.oid4vc.oid4vp.api.DirectPostResult;
-
+https://mvnrepository.com/artifact/de.eecc.oid4vc/oid4vp/versions
 import java.util.Optional;
 
 // Wallet direct_post → POST /api/auth/oid4vp/response
