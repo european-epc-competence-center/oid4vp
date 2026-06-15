@@ -4,7 +4,22 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
-const POM_PATH = path.join(__dirname, "..", "oid4vp-java", "pom.xml");
+const JAVA_ROOT = path.join(__dirname, "..", "oid4vp-java");
+const PARENT_POM = path.join(JAVA_ROOT, "pom.xml");
+const MODULE_POMS = [
+  path.join(JAVA_ROOT, "oid4vp-core", "pom.xml"),
+  path.join(JAVA_ROOT, "oid4vp-spring", "pom.xml"),
+  path.join(JAVA_ROOT, "oid4vp-spring-boot-starter", "pom.xml"),
+];
+const ALL_POMS = [PARENT_POM, ...MODULE_POMS];
+const POM_GIT_PATHS = ALL_POMS.map((pomPath) =>
+  path.relative(path.join(__dirname, ".."), pomPath)
+);
+
+const PARENT_VERSION_PATTERN =
+  /(<artifactId>oid4vp-parent<\/artifactId>\s*\n\s*<version>)[0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?(<\/version>)/;
+const PARENT_VERSION_READ_PATTERN =
+  /<artifactId>oid4vp-parent<\/artifactId>\s*\n\s*<version>([0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?)<\/version>/;
 
 const colors = {
   reset: "\x1b[0m",
@@ -21,10 +36,8 @@ function log(message, color = "reset") {
 }
 
 function getCurrentVersion() {
-  const pomContent = fs.readFileSync(POM_PATH, "utf8");
-  const versionMatch = pomContent.match(
-    /<artifactId>oid4vp-parent<\/artifactId>\s*\n\s*<version>([0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?)<\/version>/
-  );
+  const pomContent = fs.readFileSync(PARENT_POM, "utf8");
+  const versionMatch = pomContent.match(PARENT_VERSION_READ_PATTERN);
   if (!versionMatch) {
     throw new Error("Could not find project version in oid4vp-java/pom.xml");
   }
@@ -32,22 +45,25 @@ function getCurrentVersion() {
 }
 
 function updatePomVersion(newVersion) {
-  let pomContent = fs.readFileSync(POM_PATH, "utf8");
-  let versionUpdated = false;
-  pomContent = pomContent.replace(
-    /(<artifactId>oid4vp-parent<\/artifactId>\s*\n\s*<version>)[0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?(<\/version>)/,
-    (match, prefix, suffix) => {
-      versionUpdated = true;
-      return prefix + newVersion + suffix;
+  for (const pomPath of ALL_POMS) {
+    let pomContent = fs.readFileSync(pomPath, "utf8");
+    let versionUpdated = false;
+
+    pomContent = pomContent.replace(
+      PARENT_VERSION_PATTERN,
+      (match, prefix, suffix) => {
+        versionUpdated = true;
+        return prefix + newVersion + suffix;
+      }
+    );
+
+    if (!versionUpdated) {
+      throw new Error(`Could not update version in ${pomPath}`);
     }
-  );
 
-  if (!versionUpdated) {
-    throw new Error("Could not update version in oid4vp-java/pom.xml");
+    fs.writeFileSync(pomPath, pomContent);
+    log(`✓ Updated ${path.relative(path.join(__dirname, ".."), pomPath)} to ${newVersion}`, "green");
   }
-
-  fs.writeFileSync(POM_PATH, pomContent);
-  log(`✓ Updated oid4vp-java/pom.xml version to ${newVersion}`, "green");
 }
 
 function updateChangelog(version, changes) {
@@ -96,36 +112,74 @@ ${changes}
   log(`✓ Updated CHANGELOG.md with version ${version}`, "green");
 }
 
-function calculateReleaseVersion(currentVersion, type) {
+function compareSemver(a, b) {
+  const partsA = a.split(".").map(Number);
+  const partsB = b.split(".").map(Number);
+
+  for (let i = 0; i < 3; i++) {
+    const diff = (partsA[i] || 0) - (partsB[i] || 0);
+    if (diff !== 0) {
+      return diff;
+    }
+  }
+
+  return 0;
+}
+
+function getLastReleasedVersion() {
+  try {
+    execSync("git status", { stdio: "ignore" });
+  } catch {
+    return null;
+  }
+
+  try {
+    const tags = execSync('git tag -l "v*"', { encoding: "utf8" })
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((tag) => tag.replace(/^v/, ""))
+      .sort(compareSemver);
+
+    return tags.length > 0 ? tags[tags.length - 1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function calculateReleaseVersion(currentVersion, type, lastReleasedVersion) {
   const baseVersion = currentVersion.replace(/-SNAPSHOT$/, "");
-  const parts = baseVersion.split(".").map(Number);
 
   switch (type) {
     case "patch":
       return baseVersion;
-    case "minor":
+    case "minor": {
+      const base = lastReleasedVersion || baseVersion;
+      const parts = base.split(".").map(Number);
       parts[1]++;
       parts[2] = 0;
-      break;
-    case "major":
+      return parts.join(".");
+    }
+    case "major": {
+      const base = lastReleasedVersion || baseVersion;
+      const parts = base.split(".").map(Number);
       parts[0]++;
       parts[1] = 0;
       parts[2] = 0;
-      break;
+      return parts.join(".");
+    }
     default:
       throw new Error(
         `Invalid version type: ${type}. Use 'patch', 'minor', or 'major'`
       );
   }
-
-  return parts.join(".");
 }
 
 function commitAndTag(version) {
   try {
     execSync("git status", { stdio: "ignore" });
 
-    execSync("git add oid4vp-java/pom.xml CHANGELOG.md");
+    execSync(`git add ${POM_GIT_PATHS.join(" ")} CHANGELOG.md`);
 
     execSync(`git commit -m "chore: release version ${version}"`, {
       stdio: "inherit",
@@ -146,7 +200,7 @@ function commitAndTag(version) {
     return true;
   } catch (error) {
     log("⚠ Git operations failed. Please commit and tag manually:", "yellow");
-    log(`  git add oid4vp-java/pom.xml CHANGELOG.md`, "cyan");
+    log(`  git add ${POM_GIT_PATHS.join(" ")} CHANGELOG.md`, "cyan");
     log(`  git commit -m "chore: release version ${version}"`, "cyan");
     log(`  git tag -a v${version} -m "Release version ${version}"`, "cyan");
     log(`  git push && git push --tags`, "cyan");
@@ -164,7 +218,7 @@ function setNextSnapshotVersion(releaseVersion) {
   updatePomVersion(snapshotVersion);
 
   try {
-    execSync("git add oid4vp-java/pom.xml");
+    execSync(`git add ${POM_GIT_PATHS.join(" ")}`);
     execSync(
       `git commit -m "chore: prepare next development iteration ${snapshotVersion}"`,
       { stdio: "inherit" }
@@ -179,7 +233,7 @@ function setNextSnapshotVersion(releaseVersion) {
     return true;
   } catch (error) {
     log("\n⚠ Release was tagged successfully, but snapshot version setup failed.", "yellow");
-    log(`Set oid4vp-java/pom.xml to ${snapshotVersion} manually and push.`, "yellow");
+    log(`Set all pom.xml files to ${snapshotVersion} manually and push.`, "yellow");
     return false;
   }
 }
@@ -238,7 +292,7 @@ function main() {
     log("  npm run release minor    # 0.1.0-SNAPSHOT -> 0.2.0 -> 0.2.1-SNAPSHOT", "cyan");
     log("  npm run release major    # 0.1.0-SNAPSHOT -> 1.0.0 -> 1.0.1-SNAPSHOT", "cyan");
     log("\nThis will:", "yellow");
-    log("  • Update oid4vp-java/pom.xml to the release version", "cyan");
+    log("  • Update all oid4vp-java pom.xml files to the release version", "cyan");
     log("  • Update CHANGELOG.md", "cyan");
     log("  • Commit and tag the release", "cyan");
     log("  • Set next development version with -SNAPSHOT suffix", "cyan");
@@ -247,9 +301,30 @@ function main() {
   }
 
   const currentVersion = getCurrentVersion();
-  const releaseVersion = calculateReleaseVersion(currentVersion, versionType);
+  const lastReleasedVersion = getLastReleasedVersion();
+  const releaseVersion = calculateReleaseVersion(
+    currentVersion,
+    versionType,
+    lastReleasedVersion
+  );
 
   log(`Current version: ${currentVersion}`, "blue");
+  if (lastReleasedVersion) {
+    log(`Last released version: ${lastReleasedVersion}`, "blue");
+  }
+  if (
+    lastReleasedVersion &&
+    versionType !== "patch" &&
+    compareSemver(
+      currentVersion.replace(/-SNAPSHOT$/, ""),
+      lastReleasedVersion
+    ) > 0
+  ) {
+    log(
+      `Note: ${versionType} release is based on last git tag (v${lastReleasedVersion}), not the SNAPSHOT in pom.xml`,
+      "yellow"
+    );
+  }
   log(`Release version: ${releaseVersion}`, "green");
   log(`Release type: ${versionType}`, "cyan");
   log("");
@@ -280,7 +355,9 @@ function main() {
   log("\n📋 Release Summary:", "bright");
   log(`Version: ${currentVersion} -> ${releaseVersion}`, "blue");
   log("Files updated:", "blue");
-  log("  ✓ oid4vp-java/pom.xml", "green");
+  for (const pomPath of POM_GIT_PATHS) {
+    log(`  ✓ ${pomPath}`, "green");
+  }
   log("  ✓ CHANGELOG.md", "green");
 
   if (!skipGit) {
@@ -307,7 +384,7 @@ function main() {
     log("2. Commit, tag, and push when ready", "cyan");
     const parts = releaseVersion.split(".").map(Number);
     parts[2]++;
-    log(`3. Set oid4vp-java/pom.xml to ${parts.join(".")}-SNAPSHOT for next development`, "cyan");
+    log(`3. Set all pom.xml files to ${parts.join(".")}-SNAPSHOT for next development`, "cyan");
   }
 }
 
