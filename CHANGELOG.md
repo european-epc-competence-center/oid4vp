@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Multi-module Maven layout: `oid4vp-core` (`de.eecc.oid4vc:oid4vp`), `oid4vp-spring`, `oid4vp-spring-boot-starter`
+- `PresentationRequestRepository` and `PresentationVerifier` interfaces with Caffeine/HTTP default implementations
+- `Oid4Vp.builder()` for injectable repository, verifier, `ObjectMapper`, and `SecureRandom`
+- `DirectPostOutcome`, `DirectPostResult`, and optional `response_code` issuance via handler return value
+- `presentationComplete` flag on `PresentationRequest` for non-login direct_post flows
+- `GenerateRequestOptions.beforeSave` hook and `builderSupplier` documentation for pre-persistence customization
+- `PollStatusResolver` and `completed` field on `VpTokenResponse.PollResponse` (`PollResponse.asCompleted()`)
+- Sealed `Oid4VpError` model with typed errors (`UnknownState`, `VerificationFailed`, etc.)
+- Spring Boot auto-configuration (`oid4vp.*` properties, `@Bean Oid4Vp`, optional `Oid4VpExceptionHandler`)
+
+### Changed
+
+- **Breaking:** `DirectPostHandler.onVerified` now returns `DirectPostResult` instead of `DirectPostResponse`
+- **Breaking:** `Oid4VpException` is constructed with `Oid4VpError`; use `error().suggestedHttpStatus()` for HTTP mapping
+- `Oid4Vp.create(Oid4VpOptions)` delegates to `Oid4Vp.builder()`
+- Removed duplicate `de.eecc.oid4vp.*` package tree; canonical package is `de.eecc.oid4vc.oid4vp.*`
+- Renamed `PresentationRequestStore` → `CaffeinePresentationRequestRepository`, `VerifierClient` → `HttpPresentationVerifier`
+- Pinned Jackson to `${jackson.version}` (2.18.3) to avoid `RELEASE` version skew at test runtime
+
 ## [0.1.1] - 2026-06-12
 
 ### Fixed

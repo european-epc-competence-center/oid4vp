@@ -4,41 +4,35 @@
 
 Java library for generating and processing [OpenID4VP](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html) presentation requests.
 
-**Current Version**: 0.1.0-SNAPSHOT (see `oid4vp-java/pom.xml`)  
+**Current Version**: 0.2.0-SNAPSHOT (see `oid4vp-java/pom.xml`)  
 **License**: Apache License 2.0  
-**Technology Stack**: Java 25, Maven, Jackson, Caffeine, SLF4J  
-**Maven coordinates**: `de.eecc.oid4vc:oid4vp`
+**Technology Stack**: Java 25, Maven, Jackson, Caffeine, SLF4J; optional Spring Boot 3.4  
+**Maven coordinates**: `de.eecc.oid4vc:oid4vp` (core), `de.eecc.oid4vc:oid4vp-spring-boot-starter`
 
 ## Project Structure
 
 ```
 oid4vp/
-├── oid4vp-java/                 # Java library (Maven module)
-│   ├── pom.xml                  # Version source for releases
-│   └── src/main/java/de/eecc/oid4vc/oid4vp/
-│       ├── api/                 # Public API: Oid4Vp, *Options, DirectPostHandler
-│       ├── request/             # PresentationRequest, PresentationRequestDefinition
-│       │   └── template/gs1/    # Built-in GS1 license presentation template
-│       ├── store/               # PresentationRequestStore (Caffeine-backed)
-│       ├── verifier/            # VerifierClient (EECC VC Verifier compatible)
-│       ├── vp/                  # PresentationParser
-│       └── exception/           # Oid4VpException
-├── scripts/release.js           # Release automation (bumps pom, updates CHANGELOG, tags)
-├── CHANGELOG.md                 # Keep a Changelog format (see .cursor/rules/changelog-conventions.mdc)
-├── .github/workflows/
-│   ├── ci.yml                   # Build & test on main
-│   └── release.yml              # Maven Central publish + GitHub release on tag
+├── oid4vp-java/                      # Multi-module Maven parent
+│   ├── pom.xml                       # oid4vp-parent — version source for releases
+│   ├── oid4vp-core/                  # Framework-neutral library (artifact: oid4vp)
+│   ├── oid4vp-spring/                # Spring Boot auto-configuration
+│   └── oid4vp-spring-boot-starter/   # Starter dependency aggregator
+├── docs/API_INTEGRATION_ROADMAP.md   # Embedding / discovery-service integration plan
+├── scripts/release.js
+├── CHANGELOG.md
 └── README.md
 ```
+
+See [module-layout.md](module-layout.md) for embedding patterns, pluggable dependencies, and Spring setup.
 
 ## Core Features
 
 - **Presentation request generation** via `Oid4Vp.generatePresentationRequest()`
 - **Wallet URL building** with inline or `request_uri` transport
-- **Direct post handling** with verifier integration and optional redirect flow
-- **DCQL query models** and protocol constants
-- **GS1 template** (`Gs1LicenseRequest`) for Company Prefix / Prefix License credentials
-- **Claim extraction** via `PresentationParser` and template helpers
+- **Direct post handling** with optional `response_code` (`DirectPostResult`)
+- **Pluggable** repository and verifier; `Oid4Vp.builder()` for tests and host wiring
+- **DCQL query models**, GS1 template, `PresentationParser`, sealed `Oid4VpError`
 
 ## Development & Release
 
@@ -48,21 +42,10 @@ mvn test
 mvn package
 ```
 
-Release workflow (from repo root):
-
-```bash
-npm run release patch   # 0.1.0-SNAPSHOT -> 0.1.0 -> 0.1.1-SNAPSHOT
-npm run release minor   # 0.1.0-SNAPSHOT -> 0.2.0 -> 0.2.1-SNAPSHOT
-npm run release major   # 0.1.0-SNAPSHOT -> 1.0.0 -> 1.0.1-SNAPSHOT
-```
-
-Maven versioning follows the company-wallet pattern: **patch** strips `-SNAPSHOT` only, **minor/major** bump from the base version. After tagging, the script commits the next patch `-SNAPSHOT` version.
-
-See `.cursor/rules/changelog-conventions.mdc` for changelog rules. Add entries under `## [Unreleased]` before running the release script.
+Release: `npm run release minor` (from repo root). Version lives in parent `oid4vp-parent` POM.
 
 ## Important Files
 
-- `README.md` — usage examples and project structure
-- `oid4vp-java/src/main/java/de/eecc/oid4vc/oid4vp/api/Oid4Vp.java` — main library entry point
-- `oid4vp-java/pom.xml` — Maven version and build configuration
+- `oid4vp-java/oid4vp-core/src/main/java/de/eecc/oid4vc/oid4vp/api/Oid4Vp.java` — main entry point
+- `docs/API_INTEGRATION_ROADMAP.md` — full refactor rationale and discovery-service notes
 - `CHANGELOG.md` — version history

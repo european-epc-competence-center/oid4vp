@@ -23,7 +23,7 @@ function log(message, color = "reset") {
 function getCurrentVersion() {
   const pomContent = fs.readFileSync(POM_PATH, "utf8");
   const versionMatch = pomContent.match(
-    /<artifactId>oid4vp<\/artifactId>\s*\n\s*<version>([0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?)<\/version>/
+    /<artifactId>oid4vp-parent<\/artifactId>\s*\n\s*<version>([0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?)<\/version>/
   );
   if (!versionMatch) {
     throw new Error("Could not find project version in oid4vp-java/pom.xml");
@@ -35,7 +35,7 @@ function updatePomVersion(newVersion) {
   let pomContent = fs.readFileSync(POM_PATH, "utf8");
   let versionUpdated = false;
   pomContent = pomContent.replace(
-    /(<artifactId>oid4vp<\/artifactId>\s*\n\s*<version>)[0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?(<\/version>)/,
+    /(<artifactId>oid4vp-parent<\/artifactId>\s*\n\s*<version>)[0-9]+\.[0-9]+\.[0-9]+(?:-SNAPSHOT)?(<\/version>)/,
     (match, prefix, suffix) => {
       versionUpdated = true;
       return prefix + newVersion + suffix;

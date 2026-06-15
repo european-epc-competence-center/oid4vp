@@ -5,14 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.eecc.oid4vc</groupId>
-    <artifactId>oid4vp</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <artifactId>oid4vp-parent</artifactId>
+    <version>0.2.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-    <name>oid4vp</name>
+    <name>oid4vp-parent</name>
     <description>Java library for generating and processing OpenID4VP presentation requests</description>
     <url>https://github.com/european-epc-competence-center/oid4vp</url>
     <inceptionYear>2026</inceptionYear>
+
+    <modules>
+        <module>oid4vp-core</module>
+        <module>oid4vp-spring</module>
+        <module>oid4vp-spring-boot-starter</module>
+    </modules>
 
     <licenses>
         <license>
@@ -40,18 +46,29 @@
         <maven.compiler.release>25</maven.compiler.release>
 
         <lombok.version>1.18.38</lombok.version>
+        <spring-boot.version>3.4.5</spring-boot.version>
+        <jackson.version>2.18.3</jackson.version>
 
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
 
-        <!-- Release signing: set via -Dgpg.passphrase=... in CI -->
         <gpg.passphrase />
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>de.eecc.oid4vc</groupId>
+                <artifactId>oid4vp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.eecc.oid4vc</groupId>
+                <artifactId>oid4vp-spring</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
@@ -62,7 +79,17 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
-                <version>RELEASE</version>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.ben-manes.caffeine</groupId>
@@ -89,49 +116,15 @@
                 <artifactId>slf4j-simple</artifactId>
                 <version>RELEASE</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 
     <build>
         <pluginManagement>
@@ -211,12 +204,6 @@
     </build>
 
     <profiles>
-        <!--
-          Release profile: attaches sources and javadoc, GPG signs artifacts,
-          and publishes to Maven Central via the Central Publishing plugin.
-          Activate with: mvn deploy -P release
-          Requires: GPG key and Central Portal token configured.
-        -->
         <profile>
             <id>release</id>
             <build>
