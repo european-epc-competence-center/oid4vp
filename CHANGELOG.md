@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-06-15
+
 ### Fixed
 
 - Release script `minor`/`major` bumps now derive from the last git tag instead of the SNAPSHOT version in `pom.xml`, preventing skipped versions when the POM was manually advanced ahead of the last release
 - Release script now updates the parent POM and all module POM parent version references together
-
 ## [0.2.0] - 2026-06-15
 
 ### Added
