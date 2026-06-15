@@ -18,7 +18,6 @@ oid4vp/
 │   ├── oid4vp-core/                  # Framework-neutral library (artifact: oid4vp)
 │   ├── oid4vp-spring/                # Spring Boot auto-configuration
 │   └── oid4vp-spring-boot-starter/   # Starter dependency aggregator
-├── docs/API_INTEGRATION_ROADMAP.md   # Embedding / discovery-service integration plan
 ├── scripts/release.js
 ├── CHANGELOG.md
 └── README.md
@@ -30,7 +29,7 @@ See [module-layout.md](module-layout.md) for embedding patterns, pluggable depen
 
 - **Presentation request generation** via `Oid4Vp.generatePresentationRequest()`
 - **Wallet URL building** with inline or `request_uri` transport
-- **Direct post handling** with optional `response_code` (`DirectPostResult`)
+- **Direct post handling** with optional `response_code` (`DirectPostResult`) — OAuth2 login completion documented in `README.md`
 - **Pluggable** repository and verifier; `Oid4Vp.builder()` for tests and host wiring
 - **DCQL query models**, GS1 template, `PresentationParser`, `PresentationClaims` extraction via `PresentationRequestDefinition`, sealed `Oid4VpError`
 
@@ -47,5 +46,4 @@ Release: `npm run release minor` (from repo root). Version lives in parent `oid4
 ## Important Files
 
 - `oid4vp-java/oid4vp-core/src/main/java/de/eecc/oid4vc/oid4vp/api/Oid4Vp.java` — main entry point
-- `docs/API_INTEGRATION_ROADMAP.md` — full refactor rationale and discovery-service notes
 - `CHANGELOG.md` — version history

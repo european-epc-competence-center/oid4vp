@@ -16,9 +16,9 @@ import java.util.function.Supplier;
  *
  * <pre>{@code
  * oid4Vp.generatePresentationRequest(
- *     GenerateRequestOptions.<DiscoveryPresentationRequest>builder(Gs1LicenseRequest.INSTANCE)
+ *     GenerateRequestOptions.<ExtendedPresentationRequest>builder(Gs1LicenseRequest.INSTANCE)
  *         .redirect(false)
- *         .builderSupplier(() -> DiscoveryPresentationRequest.builder()
+ *         .builderSupplier(() -> ExtendedPresentationRequest.builder()
  *             .purpose(Oid4VpPurpose.ADD_ORG_GCPS)
  *             .organizationId(orgId))
  *         .build());

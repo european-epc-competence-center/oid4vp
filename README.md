@@ -98,6 +98,58 @@ PresentationClaims claims = oid4Vp.extractPresentationClaims(Gs1LicenseRequest.I
 List<String> gcps = claims.values();
 ```
 
+### OAuth 2.0 login completion (`response_code`)
+
+After the wallet delivers a verified presentation via `direct_post`, a one-time `response_code` bridges the
+OpenID4VP step to your OAuth 2.0 token endpoint.
+
+**Flow**
+
+1. The wallet POSTs `vp_token` and `state` to your `response_uri`.
+2. You call `oid4Vp.processDirectPost(vpToken, state, handler)`; the library verifies presentations and invokes your handler.
+3. For login flows, return `DirectPostResult.issueResponseCode()` from the handler. The library stores the verified session and issues a single-use `response_code`.
+4. The frontend obtains that code in one of two ways:
+   - **Wallet redirect** (`redirect(true)`): the wallet redirects the user agent to `redirect_uri#response_code=…`.
+   - **QR / poll** (`redirect(false)`): the frontend polls `GET …/response/{state}` until it receives `{ "response_code": "…" }` (204 while pending).
+5. The frontend exchanges `state` + `response_code` at your OAuth 2.0 token endpoint (for example `POST …/token`).
+6. You resolve the stored presentation by `response_code`, validate it matches `state`, extract claims, issue access/refresh tokens, and call `oid4Vp.invalidateResponseCode(request)` so the code cannot be reused.
+
+Non-login flows (for example “add credential without signing in”) can return `DirectPostResult.complete()` instead; polling then returns `{ "completed": true }` with no `response_code`.
+
+**Server-side example** (adapt paths and token issuance to your application):
+
+```java
+import com.fasterxml.jackson.databind.JsonNode;
+import de.eecc.oid4vc.oid4vp.PresentationClaims;
+import de.eecc.oid4vc.oid4vp.VpTokenResponse;
+import de.eecc.oid4vc.oid4vp.api.DirectPostResult;
+
+import java.util.Optional;
+
+// Wallet direct_post → POST /api/auth/oid4vp/response
+VpTokenResponse.DirectPostResponse directPostResponse =
+        oid4Vp.processDirectPost(vpToken, state, (LoginPresentationRequest request, JsonNode vpTokenNode) -> {
+            PresentationClaims claims = oid4Vp.extractPresentationClaims(myDefinition, vpTokenNode);
+            // persist claims on request if needed for token redemption
+            return DirectPostResult.issueResponseCode();
+        });
+
+// QR poll → GET /api/auth/oid4vp/response/{state}  (204 until ready)
+Optional<VpTokenResponse.PollResponse> poll = oid4Vp.pollPresentationStatus(state);
+
+// Token endpoint → POST /api/auth/oid4vp/token  (state + response_code)
+LoginPresentationRequest stored = oid4Vp
+        .findPresentationRequestByResponseCode(responseCode, LoginPresentationRequest.class)
+        .orElseThrow(() -> new BadRequestException("Unknown or expired response_code"));
+if (!stored.getState().equals(state)) {
+    throw new BadRequestException("response_code does not match state");
+}
+PresentationClaims claims = oid4Vp.extractPresentationClaims(myDefinition, stored);
+TokenResult tokens = issueSessionTokens(claims); // your JWT / OAuth2 issuance
+oid4Vp.invalidateResponseCode(stored);
+```
+
+
 Lower-level access: `definition.extractPresentationClaims(vpTokenNode)` or `PresentationParser` for format-specific parsing.
 
 #### Built-in template: GS1 License Presentation

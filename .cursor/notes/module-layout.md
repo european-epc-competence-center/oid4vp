@@ -17,6 +17,7 @@
 - `DirectPostHandler` → `DirectPostResult` — post-verification outcome (`ISSUE_RESPONSE_CODE`, `COMPLETE`, `CUSTOM`)
 - `GenerateRequestOptions.builderSupplier` + `beforeSave` — set app fields before `save()`
 - `PollStatusResolver` — override poll UX; default handles `response_code`, `completed`, verification errors
+- OAuth2 login: `issueResponseCode` → poll or redirect → redeem `state`+`response_code` at token endpoint → `invalidateResponseCode`
 - `Oid4VpError` sealed hierarchy — map errors without parsing HTTP status from messages
 - `PresentationRequestDefinition.extractPresentationClaims` + `Oid4Vp.extractPresentationClaims` — template-driven claim extraction from stored `vp_token`
 
