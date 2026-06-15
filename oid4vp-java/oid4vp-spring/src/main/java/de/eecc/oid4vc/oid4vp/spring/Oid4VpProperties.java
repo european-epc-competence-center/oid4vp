@@ -12,8 +12,7 @@ public record Oid4VpProperties(
         String redirectUri,
         String requestUriBaseUrl,
         boolean requestUriEnabled,
-        Duration requestTtl,
-        Duration authorizationRequestTtl
+        Duration requestTtl
 ) {
 
     public Oid4VpOptions toOptions() {
@@ -24,7 +23,6 @@ public record Oid4VpProperties(
                 .requestUriBaseUrl(requestUriBaseUrl)
                 .requestUriEnabled(requestUriEnabled)
                 .requestTtl(requestTtl)
-                .authorizationRequestTtl(authorizationRequestTtl)
                 .build();
     }
 }

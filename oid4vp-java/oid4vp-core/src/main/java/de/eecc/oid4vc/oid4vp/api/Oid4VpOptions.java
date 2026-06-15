@@ -15,14 +15,12 @@ public record Oid4VpOptions(
         String redirectUri,
         String requestUriBaseUrl,
         boolean requestUriEnabled,
-        @Builder.Default Duration requestTtl,
-        @Builder.Default Duration authorizationRequestTtl
+        @Builder.Default Duration requestTtl
 ) {
 
     private static final String DEFAULT_VERIFIER_URL = "http://vc-verifier:3000/api/verifier";
     private static final Duration DEFAULT_REQUEST_TTL =
             Duration.ofSeconds(Constants.DEFAULT_REQUEST_TTL_SECONDS);
-    private static final Duration DEFAULT_AUTHORIZATION_REQUEST_TTL = Duration.ofMinutes(5);
 
     public Oid4VpOptions {
         if (verifierUrl == null) {
@@ -30,10 +28,6 @@ public record Oid4VpOptions(
         }
         if (requestTtl == null || requestTtl.isZero() || requestTtl.isNegative()) {
             requestTtl = DEFAULT_REQUEST_TTL;
-        }
-        if (authorizationRequestTtl == null || authorizationRequestTtl.isZero()
-                || authorizationRequestTtl.isNegative()) {
-            authorizationRequestTtl = DEFAULT_AUTHORIZATION_REQUEST_TTL;
         }
     }
 }

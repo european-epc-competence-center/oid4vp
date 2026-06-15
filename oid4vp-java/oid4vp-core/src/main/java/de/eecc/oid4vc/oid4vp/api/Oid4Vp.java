@@ -95,7 +95,7 @@ public final class Oid4Vp {
                 .dcqlQuery(definition.dcqlQuery())
                 .clientMetadata(definition.clientMetadata())
                 .createdAt(now)
-                .expiresAt(now.plus(options.authorizationRequestTtl()))
+                .expiresAt(now.plus(options.requestTtl()))
                 .redirect(generateOptions.redirect());
         return (T) builder.build();
     }
