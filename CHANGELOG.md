@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-18
+
 ### Changed
 
 - `VerificationFailed` now surfaces vc-verifier error messages from `error.name` (and related fields) instead of a generic failure text
