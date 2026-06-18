@@ -6,7 +6,7 @@
 
     <groupId>de.eecc.oid4vc</groupId>
     <artifactId>oid4vp-parent</artifactId>
-    <version>0.5.1</version>
+    <version>0.5.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>oid4vp-parent</name>
