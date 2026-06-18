@@ -15,7 +15,7 @@ Include the corresponding maven dependency in your pom like
 <dependency>
   <groupId>de.eecc.oid4vc</groupId>
   <artifactId>oid4vp</artifactId>
-  <version>0.5.0</version>
+  <version>0.5.1</version>
 </dependency>
 ```
 
