@@ -13,7 +13,7 @@
 
 - `Oid4Vp.create(options)` or `Oid4Vp.builder()` — main facade
 - `PresentationRequestRepository` / `CaffeinePresentationRequestRepository` — pluggable store
-- `PresentationVerifier` / `HttpPresentationVerifier` — pluggable verifier HTTP client
+- `PresentationVerifier` / `HttpPresentationVerifier` — pluggable verifier HTTP client; `VerifierResponseErrors` extracts `error.name` from failed verifier payloads
 - `DirectPostHandler` → `DirectPostResult` — post-verification outcome (`ISSUE_RESPONSE_CODE`, `COMPLETE`, `CUSTOM`)
 - `GenerateRequestOptions.builderSupplier` + `beforeSave` — set app fields before `save()`
 - `PollStatusResolver` — override poll UX; default handles `response_code`, `completed`, verification errors

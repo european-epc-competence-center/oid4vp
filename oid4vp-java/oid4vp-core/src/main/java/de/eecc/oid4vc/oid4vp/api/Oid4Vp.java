@@ -253,7 +253,7 @@ public final class Oid4Vp {
             request.setVerificationStatus(VerificationStatus.FAILED);
             request.setVerificationError(verification.firstError());
             repository.saveAfterVerificationFailure(request);
-            throw new Oid4VpException(new VerificationFailed());
+            throw new Oid4VpException(VerificationFailed.fromVerifierResponse(verification.firstError()));
         }
 
         request.setVerificationStatus(VerificationStatus.SUCCEEDED);

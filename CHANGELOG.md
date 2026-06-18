@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `VerificationFailed` now surfaces vc-verifier error messages from `error.name` (and related fields) instead of a generic failure text
 - Documented OAuth 2.0 login completion via `response_code` in `README.md`
 
 ## [0.5.0] - 2026-06-15
