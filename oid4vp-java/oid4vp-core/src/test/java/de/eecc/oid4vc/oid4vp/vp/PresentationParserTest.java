@@ -44,6 +44,29 @@ class PresentationParserTest {
     }
 
     @Test
+    void extractCredentialMetadata_fromLdpPresentation() throws Exception {
+        JsonNode node = MAPPER.readTree("""
+                {
+                  "type": ["VerifiablePresentation"],
+                  "verifiableCredential": [{
+                    "type": ["VerifiableCredential", "GS1CompanyPrefixLicenseCredential"],
+                    "issuer": "did:example:issuer",
+                    "credentialSubject": {
+                      "id": "did:example:holder",
+                      "licenseValue": "0614141"
+                    }
+                  }]
+                }
+                """);
+
+        assertThat(PresentationParser.extractCredentialType(
+                        node, List.of("GS1CompanyPrefixLicenseCredential")))
+                .isEqualTo("GS1CompanyPrefixLicenseCredential");
+        assertThat(PresentationParser.extractIssuer(node)).isEqualTo("did:example:issuer");
+        assertThat(PresentationParser.extractSubjectId(node)).isEqualTo("did:example:holder");
+    }
+
+    @Test
     void jwtFromDataUrl_extractsCompactJwt() {
         String dataUrl = "data:application/vc-ld+jwt,eyJhbGciOiJub25lIn0.e30.sig";
 

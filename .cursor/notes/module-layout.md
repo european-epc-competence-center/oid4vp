@@ -20,6 +20,7 @@
 - OAuth2 login: `issueResponseCode` → poll or redirect → redeem `state`+`response_code` at token endpoint → `invalidateResponseCode`
 - `Oid4VpError` sealed hierarchy — map errors without parsing HTTP status from messages
 - `PresentationRequestDefinition.extractPresentationClaims` + `Oid4Vp.extractPresentationClaims` — template-driven claim extraction from stored `vp_token`
+- DCQL `CredentialMatchCriteria` and query accessors — see [dcql-query-matching.md](dcql-query-matching.md)
 
 ## Spring Boot (optional)
 

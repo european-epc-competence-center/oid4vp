@@ -31,7 +31,7 @@ class Gs1LicenseRequestTest {
 
     @Test
     void dcqlQuery_requestsGs1LicenseCredentialsInBothFormats() {
-        DcqlQuery.Query query = Gs1LicenseRequest.INSTANCE.dcqlQuery();
+        DcqlQuery.Query query = Gs1LicenseRequest.INSTANCE.templateDcqlQuery();
 
         assertThat(query.credentials()).hasSize(2);
         assertThat(query.credentials())
@@ -56,6 +56,20 @@ class Gs1LicenseRequestTest {
 
         assertThat(request.getDcqlQuery()).isEqualTo(Gs1LicenseRequest.INSTANCE.dcqlQuery());
         assertThat(oid4Vp.toOpenId4VpUrl(request)).contains("dcql_query=");
+    }
+
+    @Test
+    void generatePresentationRequest_appliesIdentityConstraints() {
+        var definition = Gs1LicenseRequest.INSTANCE
+                .requiresIssuer("did:example:issuer")
+                .requiresSubjectId("did:example:holder");
+        var request = oid4Vp.generatePresentationRequest(definition);
+
+        assertThat(request.getDcqlQuery()).isEqualTo(definition.dcqlQuery());
+        assertThat(request.getDcqlQuery().credentials().getFirst().issuers())
+                .containsExactly("did:example:issuer");
+        assertThat(request.getDcqlQuery().credentials().getFirst().subjectIds())
+                .containsExactly("did:example:holder");
     }
 
     @Test
@@ -141,13 +155,21 @@ class Gs1LicenseRequestTest {
                   "type": ["VerifiablePresentation"],
                   "verifiableCredential": [{
                     "type": ["VerifiableCredential", "GS1CompanyPrefixLicenseCredential"],
-                    "credentialSubject": { "licenseValue": "0614141" }
+                    "issuer": "did:example:issuer",
+                    "credentialSubject": {
+                      "id": "did:example:holder",
+                      "licenseValue": "0614141"
+                    }
                   }]
                 }
                 """);
 
-        assertThat(Gs1LicenseRequest.extractCredentialType(node))
+        assertThat(Gs1LicenseRequest.INSTANCE.extractCredentialType(node))
                 .isEqualTo(Gs1LicenseRequest.TYPE_COMPANY_PREFIX);
+        assertThat(Gs1LicenseRequest.INSTANCE.extractCredentialIssuer(node))
+                .isEqualTo("did:example:issuer");
+        assertThat(Gs1LicenseRequest.INSTANCE.extractCredentialSubjectId(node))
+                .isEqualTo("did:example:holder");
     }
 
     @Test

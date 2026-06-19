@@ -23,7 +23,8 @@ oid4vp/
 └── README.md
 ```
 
-See [module-layout.md](module-layout.md) for embedding patterns, pluggable dependencies, and Spring setup.
+See [module-layout.md](module-layout.md) for embedding patterns, pluggable dependencies, and Spring setup.  
+See [dcql-query-matching.md](dcql-query-matching.md) for DCQL credential-store match helpers.
 
 ## Core Features
 
@@ -31,7 +32,7 @@ See [module-layout.md](module-layout.md) for embedding patterns, pluggable depen
 - **Wallet URL building** with inline or `request_uri` transport
 - **Direct post handling** with optional `response_code` (`DirectPostResult`) — OAuth2 login completion documented in `README.md`
 - **Pluggable** repository and verifier; `Oid4Vp.builder()` for tests and host wiring
-- **DCQL query models**, GS1 template, `PresentationParser`, `PresentationClaims` extraction via `PresentationRequestDefinition`, sealed `Oid4VpError`
+- **DCQL query models** with credential-store match helpers (`CredentialMatchCriteria`, `typeValues()`, `subjectIds()`, …) — see [dcql-query-matching.md](dcql-query-matching.md); GS1 template, `PresentationParser`, `PresentationClaims` extraction via `PresentationRequestDefinition`, sealed `Oid4VpError`
 
 ## Development & Release
 
@@ -40,6 +41,8 @@ cd oid4vp-java
 mvn test
 mvn package
 ```
+
+CI (`.github/workflows/ci.yml`): on push to `main` and on pull requests — Java 25, `mvn test` in `oid4vp-java/`.
 
 Release: `npm run release minor` (from repo root). Version lives in parent `oid4vp-parent` POM and must match the `<parent><version>` in `oid4vp-core`, `oid4vp-spring`, and `oid4vp-spring-boot-starter`. `minor`/`major` bumps use the latest git tag as the base; `patch` uses the SNAPSHOT version in the POM. See `scripts/release.js`.
 
