@@ -42,6 +42,8 @@ mvn test
 mvn package
 ```
 
+CI (`.github/workflows/ci.yml`): on push to `main` and on pull requests — Java 25, `mvn test` in `oid4vp-java/`.
+
 Release: `npm run release minor` (from repo root). Version lives in parent `oid4vp-parent` POM and must match the `<parent><version>` in `oid4vp-core`, `oid4vp-spring`, and `oid4vp-spring-boot-starter`. `minor`/`major` bumps use the latest git tag as the base; `patch` uses the SNAPSHOT version in the POM. See `scripts/release.js`.
 
 ## Important Files

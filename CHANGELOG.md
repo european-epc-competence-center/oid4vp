@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- GitHub Actions CI on pull requests: run Maven tests
+
 ### Changed
 
 - DCQL `ClaimsQuery` paths for subject claims are normalized under `credentialSubject`; use `subjectClaim()` or bare segments — `issuer` remains credential-level
