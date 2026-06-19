@@ -111,11 +111,11 @@ public final class Gs1LicenseRequest implements PresentationRequestDefinition {
     private Gs1LicenseRequest() {}
 
     @Override
-    public DcqlQuery.Query dcqlQuery() {
+    public DcqlQuery.Query templateDcqlQuery() {
         List<DcqlQuery.ClaimsQuery> claims = List.of(
-                new DcqlQuery.ClaimsQuery(CLAIM_LICENSE_VALUE, PATH_LICENSE_VALUE),
-                new DcqlQuery.ClaimsQuery(CLAIM_ORGANIZATION_NAME, PATH_ORGANIZATION_NAME),
-                new DcqlQuery.ClaimsQuery(CLAIM_PARTY_GLN, PATH_PARTY_GLN)
+                DcqlQuery.subjectClaim(CLAIM_LICENSE_VALUE, PATH_LICENSE_VALUE),
+                DcqlQuery.subjectClaim(CLAIM_ORGANIZATION_NAME, PATH_ORGANIZATION_NAME),
+                DcqlQuery.subjectClaim(CLAIM_PARTY_GLN, PATH_PARTY_GLN)
         );
 
         DcqlQuery.CredentialQuery ldpVcQuery = new DcqlQuery.CredentialQuery(
@@ -178,28 +178,6 @@ public final class Gs1LicenseRequest implements PresentationRequestDefinition {
     }
 
     /**
-     * Returns the GS1 license credential type from the first matching credential in a presentation.
-     */
-    public static String extractCredentialType(JsonNode presentationNode) {
-        JsonNode root = PresentationParser.presentationRoot(presentationNode);
-        if (root == null || root.isMissingNode()) {
-            return null;
-        }
-
-        String type = credentialTypeFromVerifiableCredentials(root.get("verifiableCredential"));
-        if (type != null) {
-            return type;
-        }
-
-        JsonNode vp = root.get("vp");
-        if (vp != null && vp.isObject()) {
-            return credentialTypeFromVerifiableCredentials(vp.get("verifiableCredential"));
-        }
-
-        return null;
-    }
-
-    /**
      * Extracts all {@code licenseValue} entries from a GS1 credential presentation.
      */
     public static List<String> extractLicenseValues(JsonNode presentationNode) {
@@ -221,95 +199,6 @@ public final class Gs1LicenseRequest implements PresentationRequestDefinition {
             log.warn("No licenseValue or alternativeLicenseValue found in presentation credentials");
         }
         return new ArrayList<>(values);
-    }
-
-    private static String credentialTypeFromVerifiableCredentials(JsonNode verifiableCredential) {
-        if (verifiableCredential == null || !verifiableCredential.isArray()) {
-            return null;
-        }
-
-        for (JsonNode credentialEntry : verifiableCredential) {
-            String type = credentialTypeFromCredentialEntry(credentialEntry);
-            if (type != null) {
-                return type;
-            }
-        }
-
-        return null;
-    }
-
-    private static String credentialTypeFromCredentialEntry(JsonNode credentialEntry) {
-        if (credentialEntry == null || credentialEntry.isMissingNode()) {
-            return null;
-        }
-
-        if (credentialEntry.isTextual()) {
-            String compactJwt = PresentationParser.compactJwtFromTextualCredential(credentialEntry.asText());
-            if (compactJwt == null) {
-                return null;
-            }
-            return credentialTypeFromJwtPayload(PresentationParser.parseJwtPayload(compactJwt));
-        }
-
-        if (!credentialEntry.isObject()) {
-            return null;
-        }
-
-        String type = credentialTypeFromTypeArray(credentialEntry.get("type"));
-        if (type != null) {
-            return type;
-        }
-
-        String compactJwt = PresentationParser.extractEnvelopedJwtFromCredential(credentialEntry);
-        if (compactJwt == null) {
-            return null;
-        }
-
-        return credentialTypeFromJwtPayload(PresentationParser.parseJwtPayload(compactJwt));
-    }
-
-    private static String credentialTypeFromJwtPayload(JsonNode payload) {
-        if (payload == null || payload.isMissingNode()) {
-            return null;
-        }
-
-        String type = credentialTypeFromTypeArray(payload.get("type"));
-        if (type != null) {
-            return type;
-        }
-
-        JsonNode nestedVc = payload.get("vc");
-        if (nestedVc != null && nestedVc.isObject()) {
-            type = credentialTypeFromTypeArray(nestedVc.get("type"));
-            if (type != null) {
-                return type;
-            }
-        }
-
-        JsonNode nestedCredential = payload.get("credential");
-        if (nestedCredential != null && nestedCredential.isObject()) {
-            return credentialTypeFromTypeArray(nestedCredential.get("type"));
-        }
-
-        return null;
-    }
-
-    private static String credentialTypeFromTypeArray(JsonNode typeNode) {
-        if (typeNode == null || !typeNode.isArray()) {
-            return null;
-        }
-
-        for (JsonNode entry : typeNode) {
-            if (!entry.isTextual()) {
-                continue;
-            }
-            String value = entry.asText();
-            if (TYPE_COMPANY_PREFIX.equals(value) || TYPE_PREFIX.equals(value)) {
-                return value;
-            }
-        }
-
-        return null;
     }
 
     private static String licenseValueFromSubject(JsonNode credentialSubject) {
