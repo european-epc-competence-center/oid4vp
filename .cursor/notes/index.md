@@ -32,7 +32,7 @@ See [dcql-query-matching.md](dcql-query-matching.md) for DCQL credential-store m
 - **Wallet URL building** with inline or `request_uri` transport
 - **Direct post handling** with optional `response_code` (`DirectPostResult`) — OAuth2 login completion documented in `README.md`
 - **Pluggable** repository and verifier; `Oid4Vp.builder()` for tests and host wiring
-- **DCQL query models** with credential-store match helpers (`CredentialMatchCriteria`, `typeValues()`, `subjectIds()`, …) — see [dcql-query-matching.md](dcql-query-matching.md); GS1 template, `PresentationParser`, `PresentationClaims` extraction via `PresentationRequestDefinition`, sealed `Oid4VpError`
+- **DCQL query models** with credential-store match helpers (`CredentialMatchCriteria`, `typeValues()`, `subjectIds()`, `credentialIds()`, …) — see [dcql-query-matching.md](dcql-query-matching.md); GS1 template, `PresentationParser`, `PresentationClaims` extraction via `PresentationRequestDefinition`, sealed `Oid4VpError`
 
 ## Development & Release
 

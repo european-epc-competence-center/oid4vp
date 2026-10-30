@@ -22,10 +22,11 @@ public interface PresentationRequestDefinition {
 
     /**
      * DCQL query for this presentation request, including identity constraints from
-     * {@link #requiresIssuers(List)} or {@link #requiresSubjectIds(List)}.
+     * {@link #requiresIssuers(List)}, {@link #requiresSubjectIds(List)}, or {@link #requiresCredentialIds(List)}.
      */
     default DcqlQuery.Query dcqlQuery() {
-        return DcqlQuery.withIdentityConstraints(templateDcqlQuery(), requiredIssuers(), requiredSubjectIds());
+        return DcqlQuery.withIdentityConstraints(
+                templateDcqlQuery(), requiredIssuers(), requiredSubjectIds(), requiredCredentialIds());
     }
 
     /**
@@ -50,17 +51,35 @@ public interface PresentationRequestDefinition {
     }
 
     /**
+     * Required W3C credential ids merged into {@link #dcqlQuery()} (OR semantics per DCQL {@code values}).
+     * This is the credential's own {@code id}, not {@link #requiredSubjectIds()}.
+     */
+    default List<String> requiredCredentialIds() {
+        return List.of();
+    }
+
+    /**
      * Returns a definition that requires at least one of the given credential issuers in the DCQL query.
      */
     default PresentationRequestDefinition requiresIssuers(List<String> requiredIssuers) {
-        return withIdentityConstraints(root(), requiredIssuers, requiredSubjectIds());
+        return withIdentityConstraints(
+                root(), requiredIssuers, requiredSubjectIds(), requiredCredentialIds());
     }
 
     /**
      * Returns a definition that requires at least one of the given credential subject ids in the DCQL query.
      */
     default PresentationRequestDefinition requiresSubjectIds(List<String> requiredSubjectIds) {
-        return withIdentityConstraints(root(), requiredIssuers(), requiredSubjectIds);
+        return withIdentityConstraints(
+                root(), requiredIssuers(), requiredSubjectIds, requiredCredentialIds());
+    }
+
+    /**
+     * Returns a definition that requires at least one of the given W3C credential ids in the DCQL query.
+     */
+    default PresentationRequestDefinition requiresCredentialIds(List<String> requiredCredentialIds) {
+        return withIdentityConstraints(
+                root(), requiredIssuers(), requiredSubjectIds(), requiredCredentialIds);
     }
 
     /** Convenience for {@link #requiresIssuers(List)} with a single issuer. */
@@ -73,13 +92,20 @@ public interface PresentationRequestDefinition {
         return requiresSubjectIds(List.of(requiredSubjectId));
     }
 
+    /** Convenience for {@link #requiresCredentialIds(List)} with a single credential id. */
+    default PresentationRequestDefinition requiresCredentialId(String requiredCredentialId) {
+        return requiresCredentialIds(List.of(requiredCredentialId));
+    }
+
     private static PresentationRequestDefinition withIdentityConstraints(
             PresentationRequestDefinition root,
             List<String> requiredIssuers,
-            List<String> requiredSubjectIds) {
+            List<String> requiredSubjectIds,
+            List<String> requiredCredentialIds) {
         List<String> issuers = DcqlQuery.normalizeConstraintValues(requiredIssuers);
         List<String> subjectIds = DcqlQuery.normalizeConstraintValues(requiredSubjectIds);
-        if (issuers.isEmpty() && subjectIds.isEmpty()) {
+        List<String> credentialIds = DcqlQuery.normalizeConstraintValues(requiredCredentialIds);
+        if (issuers.isEmpty() && subjectIds.isEmpty() && credentialIds.isEmpty()) {
             return root;
         }
         return new PresentationRequestDefinition() {
@@ -101,6 +127,11 @@ public interface PresentationRequestDefinition {
             @Override
             public List<String> requiredSubjectIds() {
                 return subjectIds;
+            }
+
+            @Override
+            public List<String> requiredCredentialIds() {
+                return credentialIds;
             }
 
             @Override

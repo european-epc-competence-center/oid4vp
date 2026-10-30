@@ -4,7 +4,7 @@
 
 ## `CredentialMatchCriteria`
 
-Normalized snapshot: `credentialQueryId`, `format`, `typeValues`, `subjectIds`, `issuers`, `claimValueConstraints`, `requireCryptographicHolderBinding`.
+Normalized snapshot: `credentialQueryId`, `format`, `typeValues`, `subjectIds`, `issuers`, `credentialIds`, `claimValueConstraints`, `requireCryptographicHolderBinding`.
 
 Built via `CredentialQuery.toMatchCriteria()` or `Query.matchCriteria()`.
 
@@ -15,10 +15,11 @@ Built via `CredentialQuery.toMatchCriteria()` or `Query.matchCriteria()`.
 ## `CredentialQuery` accessors
 
 - `typeValues()` — from `meta.type_values`
-- `subjectIds()` — `values` on claims with path `["credentialSubject", "id"]` (legacy `["id"]` normalized on construction)
+- `subjectIds()` — `values` on claims with path `["credentialSubject", "id"]`
+- `credentialIds()` — `values` on claims with path `["id"]` (the W3C credential id, claim id `credentialId`)
 - `issuers()` — `values` on claims with path `["issuer"]`
 - `claimValueConstraints()` — claim id → required values (subject claims normalized under `credentialSubject`)
-- `ClaimsQuery.subjectClaim()` / `normalizeClaimPath()` — bare paths prefixed with `credentialSubject`; `issuer` stays credential-level
+- `normalizeClaimPath()` prefixes bare paths with `credentialSubject`; `issuer` and a single-segment `id` stay credential-level (`isCredentialIdPath`). `subjectClaim()` always prefixes, so a bare `id` becomes `credentialSubject.id`
 - `valuesForClaimId()` / `pathForClaimId()` / `findClaim()`
 
 ## `PresentationRequestDefinition`
@@ -27,6 +28,6 @@ Built via `CredentialQuery.toMatchCriteria()` or `Query.matchCriteria()`.
 
 Credential metadata from presentations: `templateCredentialTypes()`, `extractCredentialType()`, `extractCredentialIssuer()`, `extractCredentialSubjectId()` (via `PresentationParser`).
 
-Optional identity constraints: list-based `requiredIssuers()` / `requiresIssuers()` and `requiredSubjectIds()` / `requiresSubjectIds()` on `PresentationRequestDefinition` (`requiresIssuer()` / `requiresSubjectId()` are single-value conveniences; DCQL `values` OR semantics); default `dcqlQuery()` merges constraints into `templateDcqlQuery()`.
+Optional identity constraints: `requiredIssuers()` / `requiresIssuers()`, `requiredSubjectIds()` / `requiresSubjectIds()`, and `requiredCredentialIds()` / `requiresCredentialIds()` on `PresentationRequestDefinition` (single-value conveniences `requiresIssuer()`, `requiresSubjectId()`, `requiresCredentialId()`; DCQL `values` OR semantics); default `dcqlQuery()` merges constraints into `templateDcqlQuery()`.
 
 Helper methods on DCQL records are `@JsonIgnore` for wire serialization.

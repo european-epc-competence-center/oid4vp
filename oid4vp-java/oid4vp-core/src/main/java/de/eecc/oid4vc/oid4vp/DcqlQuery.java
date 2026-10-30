@@ -25,6 +25,9 @@ public final class DcqlQuery {
 
     public static final List<Object> CLAIM_PATH_SUBJECT_ID = List.of(CREDENTIAL_SUBJECT, "id");
 
+    /** W3C credential {@code id}. Stays on the credential, unlike {@link #CLAIM_PATH_SUBJECT_ID}. */
+    public static final List<Object> CLAIM_PATH_CREDENTIAL_ID = List.of("id");
+
     /** DCQL claims path for credential {@code issuer}. */
     public static final List<Object> CLAIM_PATH_ISSUER = List.of("issuer");
 
@@ -35,11 +38,11 @@ public final class DcqlQuery {
      * {@code credentialSubject} segment is added automatically when omitted.
      */
     public static ClaimsQuery subjectClaim(String id, List<Object> pathUnderSubject) {
-        return new ClaimsQuery(id, pathUnderSubject);
+        return subjectClaim(id, pathUnderSubject, List.of());
     }
 
     public static ClaimsQuery subjectClaim(String id, List<Object> pathUnderSubject, List<String> values) {
-        return new ClaimsQuery(id, pathUnderSubject, values);
+        return new ClaimsQuery(id, prefixCredentialSubject(pathUnderSubject), values);
     }
 
     static List<Object> normalizeClaimPath(List<Object> path) {
@@ -47,17 +50,27 @@ public final class DcqlQuery {
             return path;
         }
         List<String> segments = path.stream().map(Object::toString).toList();
-        String first = segments.getFirst();
         if (isCredentialLevelPath(segments)) {
             return List.copyOf(path);
         }
-        if (CREDENTIAL_SUBJECT.equals(first)) {
+        return prefixCredentialSubject(path);
+    }
+
+    /**
+     * Places {@code path} under {@link #CREDENTIAL_SUBJECT}. A bare {@code id} is the subject id here;
+     * the credential id is only {@link #CLAIM_PATH_CREDENTIAL_ID} on a raw {@link ClaimsQuery}.
+     */
+    private static List<Object> prefixCredentialSubject(List<Object> path) {
+        if (path == null || path.isEmpty()) {
+            return path;
+        }
+        if (CREDENTIAL_SUBJECT.equals(String.valueOf(path.getFirst()))) {
             return List.copyOf(path);
         }
-        List<Object> normalized = new ArrayList<>();
-        normalized.add(CREDENTIAL_SUBJECT);
-        normalized.addAll(path);
-        return List.copyOf(normalized);
+        List<Object> prefixed = new ArrayList<>();
+        prefixed.add(CREDENTIAL_SUBJECT);
+        prefixed.addAll(path);
+        return List.copyOf(prefixed);
     }
 
     private static boolean isCredentialLevelPath(List<String> segments) {
@@ -65,7 +78,10 @@ public final class DcqlQuery {
             return false;
         }
         String first = segments.getFirst();
-        return "issuer".equals(first) || "iss".equals(first);
+        if ("issuer".equals(first) || "iss".equals(first)) {
+            return true;
+        }
+        return segments.size() == 1 && "id".equals(first);
     }
 
     /**
@@ -77,6 +93,7 @@ public final class DcqlQuery {
             List<List<String>> typeValues,
             List<String> subjectIds,
             List<String> issuers,
+            List<String> credentialIds,
             Map<String, List<String>> claimValueConstraints,
             boolean requireCryptographicHolderBinding
     ) {
@@ -84,6 +101,7 @@ public final class DcqlQuery {
             typeValues = typeValues == null ? List.of() : List.copyOf(typeValues);
             subjectIds = subjectIds == null ? List.of() : List.copyOf(subjectIds);
             issuers = issuers == null ? List.of() : List.copyOf(issuers);
+            credentialIds = credentialIds == null ? List.of() : List.copyOf(credentialIds);
             claimValueConstraints = claimValueConstraints == null ? Map.of() : Map.copyOf(claimValueConstraints);
         }
     }
@@ -150,6 +168,7 @@ public final class DcqlQuery {
                     typeValues(),
                     subjectIds(),
                     issuers(),
+                    credentialIds(),
                     claimValueConstraints(),
                     requireCryptographicHolderBinding);
         }
@@ -177,7 +196,7 @@ public final class DcqlQuery {
         }
 
         /**
-         * Subject identifiers required by claims on path {@code ["id"]} (credential subject id).
+         * Subject identifiers required by claims on path {@code ["credentialSubject", "id"]}.
          */
         @JsonIgnore
         public List<String> subjectIds() {
@@ -186,6 +205,21 @@ public final class DcqlQuery {
             }
             return claims.stream()
                     .filter(ClaimsQuery::isSubjectIdPath)
+                    .flatMap(c -> c.values().stream())
+                    .distinct()
+                    .toList();
+        }
+
+        /**
+         * W3C credential ids required by claims on path {@code ["id"]}.
+         */
+        @JsonIgnore
+        public List<String> credentialIds() {
+            if (claims == null) {
+                return List.of();
+            }
+            return claims.stream()
+                    .filter(ClaimsQuery::isCredentialIdPath)
                     .flatMap(c -> c.values().stream())
                     .distinct()
                     .toList();
@@ -290,9 +324,13 @@ public final class DcqlQuery {
 
         @JsonIgnore
         public boolean isSubjectIdPath() {
-            List<String> segments = pathSegments();
-            return segments.equals(List.of("id"))
-                    || segments.equals(List.of(CREDENTIAL_SUBJECT, "id"));
+            return pathSegments().equals(List.of(CREDENTIAL_SUBJECT, "id"));
+        }
+
+        /** Path {@code ["id"]} is the credential's own id, not the subject id. */
+        @JsonIgnore
+        public boolean isCredentialIdPath() {
+            return pathSegments().equals(List.of("id"));
         }
 
         @JsonIgnore
@@ -311,16 +349,29 @@ public final class DcqlQuery {
      */
     public static Query withIdentityConstraints(
             Query query, List<String> requiredIssuers, List<String> requiredSubjectIds) {
+        return withIdentityConstraints(query, requiredIssuers, requiredSubjectIds, List.of());
+    }
+
+    /**
+     * Returns a copy of {@code query} with optional issuer, subject-id, and credential-id
+     * value constraints merged into every credential query's claims.
+     */
+    public static Query withIdentityConstraints(
+            Query query,
+            List<String> requiredIssuers,
+            List<String> requiredSubjectIds,
+            List<String> requiredCredentialIds) {
         if (query == null || query.credentials() == null || query.credentials().isEmpty()) {
             return query;
         }
         List<String> issuers = normalizeConstraintValues(requiredIssuers);
         List<String> subjectIds = normalizeConstraintValues(requiredSubjectIds);
-        if (issuers.isEmpty() && subjectIds.isEmpty()) {
+        List<String> credentialIds = normalizeConstraintValues(requiredCredentialIds);
+        if (issuers.isEmpty() && subjectIds.isEmpty() && credentialIds.isEmpty()) {
             return query;
         }
         List<CredentialQuery> credentials = query.credentials().stream()
-                .map(credential -> withIdentityConstraints(credential, issuers, subjectIds))
+                .map(credential -> withIdentityConstraints(credential, issuers, subjectIds, credentialIds))
                 .toList();
         return new Query(credentials);
     }
@@ -333,13 +384,26 @@ public final class DcqlQuery {
             CredentialQuery credentialQuery,
             List<String> requiredIssuers,
             List<String> requiredSubjectIds) {
+        return withIdentityConstraints(credentialQuery, requiredIssuers, requiredSubjectIds, List.of());
+    }
+
+    /**
+     * Returns a copy of {@code credentialQuery} with optional issuer, subject-id, and credential-id
+     * value constraints merged into its claims.
+     */
+    public static CredentialQuery withIdentityConstraints(
+            CredentialQuery credentialQuery,
+            List<String> requiredIssuers,
+            List<String> requiredSubjectIds,
+            List<String> requiredCredentialIds) {
         List<String> issuers = normalizeConstraintValues(requiredIssuers);
         List<String> subjectIds = normalizeConstraintValues(requiredSubjectIds);
-        if (issuers.isEmpty() && subjectIds.isEmpty()) {
+        List<String> credentialIds = normalizeConstraintValues(requiredCredentialIds);
+        if (issuers.isEmpty() && subjectIds.isEmpty() && credentialIds.isEmpty()) {
             return credentialQuery;
         }
         List<ClaimsQuery> claims = mergeIdentityConstraints(
-                credentialQuery.claims(), issuers, subjectIds);
+                credentialQuery.claims(), issuers, subjectIds, credentialIds);
         return new CredentialQuery(
                 credentialQuery.id(),
                 credentialQuery.format(),
@@ -351,10 +415,14 @@ public final class DcqlQuery {
     static List<ClaimsQuery> mergeIdentityConstraints(
             List<ClaimsQuery> claims,
             List<String> requiredIssuers,
-            List<String> requiredSubjectIds) {
+            List<String> requiredSubjectIds,
+            List<String> requiredCredentialIds) {
         List<ClaimsQuery> merged = claims == null ? new ArrayList<>() : new ArrayList<>(claims);
         if (!requiredSubjectIds.isEmpty()) {
             upsertClaimValues(merged, "id", CLAIM_PATH_SUBJECT_ID, requiredSubjectIds);
+        }
+        if (!requiredCredentialIds.isEmpty()) {
+            upsertClaimValues(merged, "credentialId", CLAIM_PATH_CREDENTIAL_ID, requiredCredentialIds);
         }
         if (!requiredIssuers.isEmpty()) {
             upsertClaimValues(merged, "issuer", CLAIM_PATH_ISSUER, requiredIssuers);

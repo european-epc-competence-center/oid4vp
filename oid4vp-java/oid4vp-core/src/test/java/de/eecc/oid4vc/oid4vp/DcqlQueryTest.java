@@ -30,7 +30,8 @@ class DcqlQueryTest {
                 "c1",
                 Constants.VP_FORMAT_JWT_VC_JSON,
                 Map.of(),
-                List.of(new DcqlQuery.ClaimsQuery(null, List.of("id"), List.of("did:example:holder"))),
+                List.of(new DcqlQuery.ClaimsQuery(
+                        null, List.of("credentialSubject", "id"), List.of("did:example:holder"))),
                 true);
 
         assertThat(query.subjectIds()).containsExactly("did:example:holder");
@@ -68,9 +69,22 @@ class DcqlQueryTest {
         assertThat(issuerClaim.pathSegments()).containsExactly("issuer");
         assertThat(issuerClaim.isUnderCredentialSubject()).isFalse();
 
-        var subjectIdClaim = new DcqlQuery.ClaimsQuery("id", List.of("id"), List.of("did:example:holder"));
+        var credentialIdClaim = new DcqlQuery.ClaimsQuery(
+                "credentialId", List.of("id"), List.of("https://wallet.example/credentials/1"));
+        assertThat(credentialIdClaim.pathSegments()).containsExactly("id");
+        assertThat(credentialIdClaim.isCredentialIdPath()).isTrue();
+        assertThat(credentialIdClaim.isSubjectIdPath()).isFalse();
+        assertThat(credentialIdClaim.isUnderCredentialSubject()).isFalse();
+
+        var subjectIdClaim = new DcqlQuery.ClaimsQuery(
+                "id", List.of("credentialSubject", "id"), List.of("did:example:holder"));
         assertThat(subjectIdClaim.pathSegments()).containsExactly("credentialSubject", "id");
         assertThat(subjectIdClaim.isSubjectIdPath()).isTrue();
+
+        var subjectIdViaHelper = DcqlQuery.subjectClaim("id", List.of("id"), List.of("did:example:holder"));
+        assertThat(subjectIdViaHelper.pathSegments()).containsExactly("credentialSubject", "id");
+        assertThat(subjectIdViaHelper.isSubjectIdPath()).isTrue();
+        assertThat(subjectIdViaHelper.isCredentialIdPath()).isFalse();
     }
 
     @Test
@@ -124,7 +138,8 @@ class DcqlQueryTest {
                 Constants.VP_FORMAT_JWT_VC_JSON,
                 Map.of("type_values", List.of(
                         List.of("VerifiableCredential", "GS1PrefixLicenseCredential"))),
-                List.of(new DcqlQuery.ClaimsQuery("id", List.of("id"), List.of("did:web:holder.example"))),
+                List.of(new DcqlQuery.ClaimsQuery(
+                        "id", List.of("credentialSubject", "id"), List.of("did:web:holder.example"))),
                 false);
 
         DcqlQuery.CredentialMatchCriteria criteria = query.toMatchCriteria();
@@ -221,6 +236,26 @@ class DcqlQueryTest {
                 .containsExactly("did:example:issuer");
         assertThat(definition.dcqlQuery().credentials().getFirst().subjectIds())
                 .containsExactly("did:example:holder");
+    }
+
+    @Test
+    void presentationRequestDefinition_requiresCredentialId_pinsTheCredentialIdOnEveryQuery() {
+        PresentationRequestDefinition definition = Gs1LicenseRequest.INSTANCE
+                .requiresSubjectId("did:example:holder")
+                .requiresCredentialId("https://wallet.example/credentials/1");
+
+        assertThat(definition.requiredCredentialIds()).containsExactly("https://wallet.example/credentials/1");
+        assertThat(definition.requiredSubjectIds()).containsExactly("did:example:holder");
+        for (DcqlQuery.CredentialQuery credential : definition.dcqlQuery().credentials()) {
+            assertThat(credential.credentialIds()).containsExactly("https://wallet.example/credentials/1");
+            assertThat(credential.subjectIds()).containsExactly("did:example:holder");
+            DcqlQuery.ClaimsQuery credentialId = credential.claims().stream()
+                    .filter(DcqlQuery.ClaimsQuery::isCredentialIdPath)
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(credentialId.id()).isEqualTo("credentialId");
+            assertThat(credentialId.path()).isEqualTo(List.of("id"));
+        }
     }
 
     @Test
