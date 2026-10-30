@@ -75,7 +75,7 @@ import de.eecc.oid4vc.oid4vp.request.PresentationRequestDefinition;
 
 PresentationRequestDefinition myDefinition = new PresentationRequestDefinition() {
     @Override
-    public DcqlQuery.Query dcqlQuery() {
+    public DcqlQuery.Query templateDcqlQuery() {
         return new DcqlQuery.Query(List.of(
                 new DcqlQuery.CredentialQuery(
                         "my_credential_query_id",

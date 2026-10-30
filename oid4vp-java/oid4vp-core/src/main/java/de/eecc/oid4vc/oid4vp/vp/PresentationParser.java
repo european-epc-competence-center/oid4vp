@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Format-agnostic helpers for parsing OID4VP {@code vp_token} presentations.
@@ -117,6 +118,222 @@ public final class PresentationParser {
         }
 
         return List.of();
+    }
+
+    /**
+     * Returns the specific credential type from the first matching verifiable credential in a presentation.
+     *
+     * @param acceptedTypes when non-empty, only types in this list are returned; otherwise the first
+     *                      type other than {@code VerifiableCredential} / {@code VerifiablePresentation}
+     */
+    public static String extractCredentialType(JsonNode presentationNode, List<String> acceptedTypes) {
+        return fromFirstCredential(
+                presentationNode, entry -> credentialTypeFromCredentialEntry(entry, acceptedTypes));
+    }
+
+    /** Returns the issuer from the first verifiable credential in a presentation. */
+    public static String extractIssuer(JsonNode presentationNode) {
+        return fromFirstCredential(presentationNode, PresentationParser::issuerFromCredentialEntry);
+    }
+
+    /** Returns the credential subject {@code id} from the first verifiable credential in a presentation. */
+    public static String extractSubjectId(JsonNode presentationNode) {
+        JsonNode root = presentationRoot(presentationNode);
+        if (root != null && !root.isMissingNode()) {
+            JsonNode directSubject = root.get("credentialSubject");
+            if (directSubject != null && !directSubject.isMissingNode()) {
+                String subjectId = textClaim(directSubject.get("id"));
+                if (subjectId != null) {
+                    return subjectId;
+                }
+            }
+        }
+        return fromFirstCredential(presentationNode, PresentationParser::subjectIdFromCredentialEntry);
+    }
+
+    private static String fromFirstCredential(JsonNode presentationNode, Function<JsonNode, String> extractor) {
+        JsonNode root = presentationRoot(presentationNode);
+        if (root == null || root.isMissingNode()) {
+            return null;
+        }
+
+        String value = fromVerifiableCredentials(root.get("verifiableCredential"), extractor);
+        if (value != null) {
+            return value;
+        }
+
+        JsonNode vp = root.get("vp");
+        if (vp != null && vp.isObject()) {
+            value = fromVerifiableCredentials(vp.get("verifiableCredential"), extractor);
+            if (value != null) {
+                return value;
+            }
+        }
+
+        return extractor.apply(root);
+    }
+
+    private static String fromVerifiableCredentials(
+            JsonNode verifiableCredential, Function<JsonNode, String> extractor) {
+        if (verifiableCredential == null || !verifiableCredential.isArray()) {
+            return null;
+        }
+
+        for (JsonNode credentialEntry : verifiableCredential) {
+            String value = extractor.apply(credentialEntry);
+            if (value != null) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    private static String credentialTypeFromCredentialEntry(JsonNode credentialEntry, List<String> acceptedTypes) {
+        if (credentialEntry == null || credentialEntry.isMissingNode()) {
+            return null;
+        }
+
+        if (credentialEntry.isTextual()) {
+            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asText());
+            if (compactJwt == null) {
+                return null;
+            }
+            return credentialTypeFromJwtPayload(parseJwtPayload(compactJwt), acceptedTypes);
+        }
+
+        if (!credentialEntry.isObject()) {
+            return null;
+        }
+
+        String type = specificTypeFromTypeArray(credentialEntry.get("type"), acceptedTypes);
+        if (type != null) {
+            return type;
+        }
+
+        String compactJwt = extractEnvelopedJwtFromCredential(credentialEntry);
+        if (compactJwt == null) {
+            return null;
+        }
+
+        return credentialTypeFromJwtPayload(parseJwtPayload(compactJwt), acceptedTypes);
+    }
+
+    private static String credentialTypeFromJwtPayload(JsonNode payload, List<String> acceptedTypes) {
+        if (payload == null || payload.isMissingNode()) {
+            return null;
+        }
+
+        String type = specificTypeFromTypeArray(payload.get("type"), acceptedTypes);
+        if (type != null) {
+            return type;
+        }
+
+        JsonNode nestedVc = payload.get("vc");
+        if (nestedVc != null && nestedVc.isObject()) {
+            type = specificTypeFromTypeArray(nestedVc.get("type"), acceptedTypes);
+            if (type != null) {
+                return type;
+            }
+        }
+
+        JsonNode nestedCredential = payload.get("credential");
+        if (nestedCredential != null && nestedCredential.isObject()) {
+            return specificTypeFromTypeArray(nestedCredential.get("type"), acceptedTypes);
+        }
+
+        return null;
+    }
+
+    private static String specificTypeFromTypeArray(JsonNode typeNode, List<String> acceptedTypes) {
+        if (typeNode == null || !typeNode.isArray()) {
+            return null;
+        }
+
+        for (JsonNode entry : typeNode) {
+            if (!entry.isTextual()) {
+                continue;
+            }
+            String value = entry.asText();
+            if (acceptedTypes != null && !acceptedTypes.isEmpty()) {
+                if (acceptedTypes.contains(value)) {
+                    return value;
+                }
+                continue;
+            }
+            if (!"VerifiableCredential".equals(value) && !"VerifiablePresentation".equals(value)) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    private static String issuerFromCredentialEntry(JsonNode credentialEntry) {
+        if (credentialEntry == null || credentialEntry.isMissingNode()) {
+            return null;
+        }
+
+        if (credentialEntry.isTextual()) {
+            String compactJwt = compactJwtFromTextualCredential(credentialEntry.asText());
+            if (compactJwt == null) {
+                return null;
+            }
+            return issuerFromJson(parseJwtPayload(compactJwt));
+        }
+
+        if (!credentialEntry.isObject()) {
+            return null;
+        }
+
+        String issuer = issuerFromJson(credentialEntry);
+        if (issuer != null) {
+            return issuer;
+        }
+
+        String compactJwt = extractEnvelopedJwtFromCredential(credentialEntry);
+        if (compactJwt == null) {
+            return null;
+        }
+
+        return issuerFromJson(parseJwtPayload(compactJwt));
+    }
+
+    private static String issuerFromJson(JsonNode node) {
+        if (node == null || node.isMissingNode()) {
+            return null;
+        }
+
+        String issuer = textClaim(node.get("issuer"));
+        if (issuer != null) {
+            return issuer;
+        }
+
+        JsonNode issuerNode = node.get("issuer");
+        if (issuerNode != null && issuerNode.isObject()) {
+            issuer = textClaim(issuerNode.get("id"));
+            if (issuer != null) {
+                return issuer;
+            }
+        }
+
+        return textClaim(node.get("iss"));
+    }
+
+    private static String subjectIdFromCredentialEntry(JsonNode credentialEntry) {
+        JsonNode subject = credentialSubjectFromVerifiableCredentialEntry(credentialEntry);
+        if (subject == null || subject.isMissingNode()) {
+            return null;
+        }
+        return textClaim(subject.get("id"));
+    }
+
+    private static String textClaim(JsonNode value) {
+        if (value == null || value.isNull() || !value.isTextual()) {
+            return null;
+        }
+        String text = value.asText().trim();
+        return text.isBlank() ? null : text;
     }
 
     public static String compactJwtFromTextualCredential(String value) {

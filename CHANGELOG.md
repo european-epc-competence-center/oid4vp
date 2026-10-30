@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `PresentationRequestDefinition.requiresCredentialId` pins the W3C credential `id` on every credential query (`path` `["id"]`, claim id `credentialId`)
+- GitHub Actions CI on pull requests: run Maven tests
+- Identity constraints on `PresentationRequestDefinition` are list-based (`requiredIssuers()`, `requiresIssuers()`); `requiresIssuer()` / `requiresSubjectId()` are single-value conveniences
+- Credential metadata extraction on `PresentationRequestDefinition`: `extractCredentialType()`, `extractCredentialIssuer()`, `extractCredentialSubjectId()`, backed by `PresentationParser`
+- DCQL convenience accessors for credential store matching: `CredentialMatchCriteria`, `typeValues()`, `subjectIds()`, `claimValueConstraints()`, `valuesForClaimId()`, `pathForClaimId()`, `Query.matchCriteria()` / `credentialsForFormat()`
+- `ClaimsQuery.values` for DCQL value constraints; `PresentationRequestDefinition` template helpers (`templateClaimIds`, `credentialMatchCriteria`, `matchCriteriaForFormat`)
+
+### Changed
+
+- A `ClaimsQuery` path `["id"]` is the W3C credential id and is no longer rewritten to `credentialSubject.id`. `subjectClaim()` still prefixes a bare `id`; subject id constraints stay on `["credentialSubject","id"]`
+- DCQL `ClaimsQuery` paths for subject claims are normalized under `credentialSubject`; use `subjectClaim()` or bare segments — `issuer` and a bare `id` remain credential-level
+
 ## [0.5.1] - 2026-06-18
 
 ### Changed
