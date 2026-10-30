@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-30
+
 ### Added
 
 - `PresentationRequestDefinition.requiresCredentialId` pins the W3C credential `id` on every credential query (`path` `["id"]`, claim id `credentialId`)
@@ -20,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A `ClaimsQuery` path `["id"]` is the W3C credential id and is no longer rewritten to `credentialSubject.id`. `subjectClaim()` still prefixes a bare `id`; subject id constraints stay on `["credentialSubject","id"]`
 - DCQL `ClaimsQuery` paths for subject claims are normalized under `credentialSubject`; use `subjectClaim()` or bare segments — `issuer` and a bare `id` remain credential-level
-
 ## [0.5.1] - 2026-06-18
 
 ### Changed
