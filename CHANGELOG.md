@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-07
+
 ### Changed
 
 - **Breaking:** `ClaimsQuery` keeps the path from the credential root (OpenID4VP §7). A bare path such as `["last_name"]` or `["licenseValue"]` is no longer rewritten under `credentialSubject`. Use `DcqlQuery.subjectClaim()` when the claim sits on a W3C credential subject
 - `issuers()` also reads an SD-JWT `iss` claim (`["iss"]`)
 - `VpTokenResponse.VpToken` serializes as the OID4VP §8.1 object (credential query id → presentation array). `VpToken.oneEach` builds that object for one presentation per query id
-
 ## [0.7.0] - 2026-11-07
 
 ### Changed
