@@ -1,7 +1,7 @@
 package de.eecc.oid4vc.oid4vp.vp;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -39,8 +39,8 @@ class PresentationParserTest {
         List<JsonNode> subjects = PresentationParser.collectCredentialSubjects(node);
 
         assertThat(subjects).hasSize(2);
-        assertThat(subjects.get(0).get("licenseValue").asText()).isEqualTo("0614141");
-        assertThat(subjects.get(1).get("licenseValue").asText()).isEqualTo("0614142");
+        assertThat(subjects.get(0).get("licenseValue").asString()).isEqualTo("0614141");
+        assertThat(subjects.get(1).get("licenseValue").asString()).isEqualTo("0614142");
     }
 
     @Test

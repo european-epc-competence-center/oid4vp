@@ -1,6 +1,6 @@
 package de.eecc.oid4vc.oid4vp.verifier;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Extracts human-readable error messages from vc-verifier API responses.
@@ -51,8 +51,8 @@ public final class VerifierResponseErrors {
 
     private static String textAt(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        if (value != null && value.isTextual()) {
-            String text = value.asText();
+        if (value != null && value.isString()) {
+            String text = value.asString();
             return text.isBlank() ? null : text;
         }
         return null;

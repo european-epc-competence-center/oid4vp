@@ -1,6 +1,6 @@
 package de.eecc.oid4vc.oid4vp.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.store.CaffeinePresentationRequestRepository;
 import de.eecc.oid4vc.oid4vp.store.PresentationRequestRepository;
 import de.eecc.oid4vc.oid4vp.verifier.HttpPresentationVerifier;

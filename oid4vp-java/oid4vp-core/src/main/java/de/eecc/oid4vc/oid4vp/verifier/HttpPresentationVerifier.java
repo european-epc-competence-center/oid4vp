@@ -1,9 +1,9 @@
 package de.eecc.oid4vc.oid4vp.verifier;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import de.eecc.oid4vc.oid4vp.VerifierResponse;
 import de.eecc.oid4vc.oid4vp.exception.InvalidVpToken;
 import de.eecc.oid4vc.oid4vp.exception.Oid4VpException;
@@ -88,8 +88,8 @@ public class HttpPresentationVerifier implements PresentationVerifier {
 
     @Override
     public List<Object> buildVerifierRequestBody(JsonNode presentationNode) {
-        if (presentationNode.isTextual()) {
-            return List.of(presentationNode.asText());
+        if (presentationNode.isString()) {
+            return List.of(presentationNode.asString());
         }
         if (presentationNode.isObject()) {
             return List.of(objectMapper.convertValue(

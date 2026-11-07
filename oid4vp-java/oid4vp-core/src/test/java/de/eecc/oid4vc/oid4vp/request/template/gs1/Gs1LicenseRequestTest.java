@@ -1,7 +1,7 @@
 package de.eecc.oid4vc.oid4vp.request.template.gs1;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.Constants;
 import de.eecc.oid4vc.oid4vp.DcqlQuery;
 import de.eecc.oid4vc.oid4vp.PresentationClaims;

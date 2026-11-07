@@ -123,7 +123,7 @@ Non-login flows (for example “add credential without signing in”) can return
 **Server-side example** (adapt paths and token issuance to your application):
 
 ```java
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.oid4vc.oid4vp.PresentationClaims;
 import de.eecc.oid4vc.oid4vp.VpTokenResponse;
 import de.eecc.oid4vc.oid4vp.api.DirectPostResult;

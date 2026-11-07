@@ -1,7 +1,7 @@
 package de.eecc.oid4vc.oid4vp.verifier;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.api.Oid4Vp;
 import de.eecc.oid4vc.oid4vp.api.Oid4VpOptions;
 import org.junit.jupiter.api.BeforeEach;

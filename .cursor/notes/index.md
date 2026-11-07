@@ -4,9 +4,9 @@
 
 Java library for generating and processing [OpenID4VP](https://openid.net/specs/openid-4-verifiable-presentations-1_0.html) presentation requests.
 
-**Current Version**: 0.4.1-SNAPSHOT (see `oid4vp-java/pom.xml` and module parent references)  
+**Current Version**: 0.6.1-SNAPSHOT (see `oid4vp-java/pom.xml` and module parent references)  
 **License**: Apache License 2.0  
-**Technology Stack**: Java 25, Maven, Jackson, Caffeine, SLF4J; optional Spring Boot 3.4  
+**Technology Stack**: Java 25, Maven, Jackson 3 (`tools.jackson`), Caffeine, SLF4J; optional Spring Boot 4.1. Library versions come from the imported `spring-boot-dependencies` BOM (parent POM)  
 **Maven coordinates**: `de.eecc.oid4vc:oid4vp` (core), `de.eecc.oid4vc:oid4vp-spring-boot-starter`
 
 ## Project Structure

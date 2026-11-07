@@ -2,7 +2,7 @@ package de.eecc.oid4vc.oid4vp.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.oid4vc.oid4vp.ClientMetadata;
 import de.eecc.oid4vc.oid4vp.Constants;
 import de.eecc.oid4vc.oid4vp.DcqlQuery;

@@ -10,12 +10,12 @@ import java.time.Duration;
  */
 @Builder
 public record Oid4VpOptions(
-        @Builder.Default String verifierUrl,
+        String verifierUrl,
         String responseUri,
         String redirectUri,
         String requestUriBaseUrl,
         boolean requestUriEnabled,
-        @Builder.Default Duration requestTtl
+        Duration requestTtl
 ) {
 
     private static final String DEFAULT_VERIFIER_URL = "http://vc-verifier:3000/api/verifier";
