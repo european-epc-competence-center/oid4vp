@@ -18,8 +18,8 @@ Built via `CredentialQuery.toMatchCriteria()` or `Query.matchCriteria()`.
 - `subjectIds()` — `values` on claims with path `["credentialSubject", "id"]`
 - `credentialIds()` — `values` on claims with path `["id"]` (the W3C credential id, claim id `credentialId`)
 - `issuers()` — `values` on claims with path `["issuer"]`
-- `claimValueConstraints()` — claim id → required values (subject claims normalized under `credentialSubject`)
-- `normalizeClaimPath()` prefixes bare paths with `credentialSubject`; `issuer` and a single-segment `id` stay credential-level (`isCredentialIdPath`). `subjectClaim()` always prefixes, so a bare `id` becomes `credentialSubject.id`
+- `claimValueConstraints()` — claim id → required values
+- A claims path is taken from the credential root (OpenID4VP §7) and is not rewritten. `["last_name"]` stays `last_name`; `["id"]` is the W3C credential id; `["issuer"]` and `["iss"]` are issuer paths. `subjectClaim()` is the helper that places a path under `credentialSubject` (a bare `id` there becomes `credentialSubject.id`)
 - `valuesForClaimId()` / `pathForClaimId()` / `findClaim()`
 
 ## `PresentationRequestDefinition`

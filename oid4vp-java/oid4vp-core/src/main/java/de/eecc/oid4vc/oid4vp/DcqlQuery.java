@@ -45,20 +45,12 @@ public final class DcqlQuery {
         return new ClaimsQuery(id, prefixCredentialSubject(pathUnderSubject), values);
     }
 
-    static List<Object> normalizeClaimPath(List<Object> path) {
-        if (path == null || path.isEmpty()) {
-            return path;
-        }
-        List<String> segments = path.stream().map(Object::toString).toList();
-        if (isCredentialLevelPath(segments)) {
-            return List.copyOf(path);
-        }
-        return prefixCredentialSubject(path);
-    }
-
     /**
      * Places {@code path} under {@link #CREDENTIAL_SUBJECT}. A bare {@code id} is the subject id here;
      * the credential id is only {@link #CLAIM_PATH_CREDENTIAL_ID} on a raw {@link ClaimsQuery}.
+     *
+     * <p>OpenID4VP §7 paths are taken from the credential root and are not rewritten. Use this helper
+     * when building a W3C subject claim. A path read from a DCQL query stays as the verifier sent it.
      */
     private static List<Object> prefixCredentialSubject(List<Object> path) {
         if (path == null || path.isEmpty()) {
@@ -71,17 +63,6 @@ public final class DcqlQuery {
         prefixed.add(CREDENTIAL_SUBJECT);
         prefixed.addAll(path);
         return List.copyOf(prefixed);
-    }
-
-    private static boolean isCredentialLevelPath(List<String> segments) {
-        if (segments.isEmpty()) {
-            return false;
-        }
-        String first = segments.getFirst();
-        if ("issuer".equals(first) || "iss".equals(first)) {
-            return true;
-        }
-        return segments.size() == 1 && "id".equals(first);
     }
 
     /**
@@ -293,7 +274,7 @@ public final class DcqlQuery {
 
         public ClaimsQuery {
             values = values == null ? List.of() : List.copyOf(values);
-            path = normalizeClaimPath(path);
+            path = path == null ? List.of() : List.copyOf(path);
         }
 
         @JsonIgnore
@@ -333,10 +314,15 @@ public final class DcqlQuery {
             return pathSegments().equals(List.of("id"));
         }
 
+        /** W3C {@code issuer} or SD-JWT {@code iss}, both at the credential root (OpenID4VP §7). */
         @JsonIgnore
         public boolean isIssuerPath() {
             List<String> segments = pathSegments();
-            return segments.size() == 1 && "issuer".equals(segments.getFirst());
+            if (segments.size() != 1) {
+                return false;
+            }
+            String first = segments.getFirst();
+            return "issuer".equals(first) || "iss".equals(first);
         }
     }
 
@@ -444,10 +430,10 @@ public final class DcqlQuery {
 
     private static void upsertClaimValues(
             List<ClaimsQuery> claims, String claimId, List<Object> path, List<String> values) {
-        List<Object> normalizedPath = normalizeClaimPath(path);
+        List<Object> storedPath = path == null ? List.of() : List.copyOf(path);
         for (int i = 0; i < claims.size(); i++) {
             ClaimsQuery existing = claims.get(i);
-            if (pathSegmentsEqual(existing.path(), normalizedPath)) {
+            if (pathSegmentsEqual(existing.path(), storedPath)) {
                 claims.set(i, new ClaimsQuery(
                         existing.id() != null ? existing.id() : claimId,
                         existing.path(),
@@ -455,11 +441,18 @@ public final class DcqlQuery {
                 return;
             }
         }
-        claims.add(new ClaimsQuery(claimId, normalizedPath, values));
+        claims.add(new ClaimsQuery(claimId, storedPath, values));
     }
 
     private static boolean pathSegmentsEqual(List<Object> left, List<Object> right) {
-        return normalizeClaimPath(left).equals(normalizeClaimPath(right));
+        return segments(left).equals(segments(right));
+    }
+
+    private static List<String> segments(List<Object> path) {
+        if (path == null || path.isEmpty()) {
+            return List.of();
+        }
+        return path.stream().map(String::valueOf).toList();
     }
 
     /**

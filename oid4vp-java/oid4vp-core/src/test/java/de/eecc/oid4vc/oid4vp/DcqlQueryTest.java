@@ -3,6 +3,7 @@ package de.eecc.oid4vc.oid4vp;
 import de.eecc.oid4vc.oid4vp.request.PresentationRequestDefinition;
 import de.eecc.oid4vc.oid4vp.request.template.gs1.Gs1LicenseRequest;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -44,8 +45,8 @@ class DcqlQueryTest {
                 Constants.VP_FORMAT_JWT_VC_JSON,
                 Map.of(),
                 List.of(
-                        new DcqlQuery.ClaimsQuery("licenseValue", List.of("licenseValue"), List.of("0614141")),
-                        new DcqlQuery.ClaimsQuery("partyGLN", List.of("organization", "gs1:partyGLN"), List.of())),
+                        DcqlQuery.subjectClaim("licenseValue", List.of("licenseValue"), List.of("0614141")),
+                        DcqlQuery.subjectClaim("partyGLN", List.of("organization", "gs1:partyGLN"))),
                 true);
 
         assertThat(query.claimValueConstraints())
@@ -56,6 +57,26 @@ class DcqlQueryTest {
                 .contains(List.of("credentialSubject", "licenseValue"));
         assertThat(query.pathForClaimId("partyGLN"))
                 .contains(List.of("credentialSubject", "organization", "gs1:partyGLN"));
+    }
+
+    @Test
+    void claimsQuery_keepsAPathFromTheCredentialRoot() throws Exception {
+        var claim = new DcqlQuery.ClaimsQuery("last_name", List.of("last_name"));
+
+        assertThat(claim.pathSegments()).containsExactly("last_name");
+        assertThat(claim.isUnderCredentialSubject()).isFalse();
+
+        String posted = """
+                {"credentials":[{
+                  "id":"my_credential",
+                  "format":"dc+sd-jwt",
+                  "meta":{"vct_values":["https://credentials.example.com/identity_credential"]},
+                  "claims":[{"path":["last_name"]}]
+                }]}
+                """;
+        DcqlQuery.Query query = new ObjectMapper().readValue(posted, DcqlQuery.Query.class);
+        assertThat(query.credentials().getFirst().claims().getFirst().pathSegments())
+                .containsExactly("last_name");
     }
 
     @Test
@@ -162,6 +183,15 @@ class DcqlQueryTest {
                 true);
 
         assertThat(query.issuers()).containsExactly("did:example:issuer");
+
+        var sdJwt = new DcqlQuery.CredentialQuery(
+                "c1",
+                "dc+sd-jwt",
+                Map.of(),
+                List.of(new DcqlQuery.ClaimsQuery("iss", List.of("iss"), List.of("did:example:issuer"))),
+                true);
+        assertThat(sdJwt.issuers()).containsExactly("did:example:issuer");
+        assertThat(sdJwt.claims().getFirst().isIssuerPath()).isTrue();
     }
 
     @Test

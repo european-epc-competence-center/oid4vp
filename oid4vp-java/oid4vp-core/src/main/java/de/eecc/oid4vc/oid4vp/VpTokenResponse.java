@@ -1,10 +1,14 @@
 package de.eecc.oid4vc.oid4vp;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import tools.jackson.databind.JsonNode;
 import lombok.Builder;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,10 +19,35 @@ public final class VpTokenResponse {
 
     private VpTokenResponse() {}
 
-    /** Parsed vp_token JSON object: credential query id → presentation arrays. */
-    @Builder
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record VpToken(Map<String, List<Object>> presentations) {}
+    /**
+     * OID4VP §8.1 {@code vp_token}: a JSON object whose keys are DCQL credential query ids and whose
+     * values are arrays of presentations. The object is the token. It is not wrapped in another field.
+     */
+    public record VpToken(Map<String, List<Object>> presentations) {
+        @JsonCreator
+        public VpToken {
+            presentations = presentations == null ? Map.of() : Map.copyOf(presentations);
+        }
+
+        /** The §8.1 object itself. */
+        @JsonValue
+        public Map<String, List<Object>> presentations() {
+            return presentations;
+        }
+
+        /** One presentation for each credential query id. {@code multiple} false means a single entry. */
+        public static VpToken oneEach(Object presentation, List<String> credentialQueryIds) {
+            Map<String, List<Object>> byQueryId = new LinkedHashMap<>();
+            if (credentialQueryIds != null) {
+                for (String id : credentialQueryIds) {
+                    if (id != null && !id.isBlank()) {
+                        byQueryId.computeIfAbsent(id, key -> new ArrayList<>()).add(presentation);
+                    }
+                }
+            }
+            return new VpToken(byQueryId);
+        }
+    }
 
     /** Response returned to the wallet after processing direct_post. */
     @Builder
