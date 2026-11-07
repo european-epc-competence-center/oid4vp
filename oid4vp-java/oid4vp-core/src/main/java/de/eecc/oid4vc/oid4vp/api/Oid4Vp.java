@@ -1,8 +1,8 @@
 package de.eecc.oid4vc.oid4vp.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.Constants;
 import de.eecc.oid4vc.oid4vp.PresentationClaims;
 import de.eecc.oid4vc.oid4vp.request.PresentationRequest;
@@ -135,7 +135,7 @@ public final class Oid4Vp {
                         .append(encode(objectMapper.writeValueAsString(authorizationRequest.clientMetadata())));
             }
             return builder.toString();
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new Oid4VpException(new InternalError(
                     "Failed to serialize request to openid4vp URL: " + e.getMessage()), e);
         }
@@ -160,7 +160,7 @@ public final class Oid4Vp {
                         .append(encode(objectMapper.writeValueAsString(request.getClientMetadata())));
             }
             return builder.toString();
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new Oid4VpException(new InternalError(
                     "Failed to serialize request to openid4vp URL: " + e.getMessage()), e);
         }
@@ -387,7 +387,7 @@ public final class Oid4Vp {
     private JsonNode parseVpToken(String vpToken) {
         try {
             return objectMapper.readTree(vpToken);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new Oid4VpException(new InvalidVpToken("Invalid vp_token JSON: " + e.getMessage()), e);
         }
     }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** Jackson 2 → Jackson 3. Public API types such as `JsonNode`, `ObjectMapper` (`Oid4VpBuilder.objectMapper(...)`, `HttpPresentationVerifier`) are now `tools.jackson.databind.*`; `com.fasterxml.jackson.annotation` is unchanged. Consumers must use Jackson 3 (Spring Boot 4)
+  - The default mapper uses Jackson 3 defaults; notably a `vp_token` with trailing content after the JSON is now rejected as invalid
+- **Breaking:** Spring Boot 3.4.5 → 4.1.2 for `oid4vp-spring` / `oid4vp-spring-boot-starter` (Spring Framework 7). The auto-configuration uses Boot's Jackson 3 `JsonMapper` bean when present
+- Library versions (Jackson, JUnit 6, Lombok, Caffeine, SLF4J, AssertJ) are managed by the Spring Boot BOM instead of `RELEASE` versions, which had resolved `slf4j-api` to `2.1.0-alpha1`
+- Maven plugins: compiler 3.16.0, surefire 3.6.1, enforcer 3.7.0
+
 ## [0.6.0] - 2026-10-30
 
 ### Added

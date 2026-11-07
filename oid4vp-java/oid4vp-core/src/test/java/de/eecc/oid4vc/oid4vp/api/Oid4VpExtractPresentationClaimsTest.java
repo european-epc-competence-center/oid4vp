@@ -1,6 +1,6 @@
 package de.eecc.oid4vc.oid4vp.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.PresentationClaims;
 import de.eecc.oid4vc.oid4vp.exception.EmptyPresentationClaims;
 import de.eecc.oid4vc.oid4vp.exception.InvalidVpToken;

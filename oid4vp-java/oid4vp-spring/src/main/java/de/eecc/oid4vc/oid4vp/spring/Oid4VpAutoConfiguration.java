@@ -1,6 +1,6 @@
 package de.eecc.oid4vc.oid4vp.spring;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import de.eecc.oid4vc.oid4vp.api.Oid4Vp;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

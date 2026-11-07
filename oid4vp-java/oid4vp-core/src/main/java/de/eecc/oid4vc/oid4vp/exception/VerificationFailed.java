@@ -1,6 +1,6 @@
 package de.eecc.oid4vc.oid4vp.exception;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import de.eecc.oid4vc.oid4vp.verifier.VerifierResponseErrors;
 
 public record VerificationFailed(String detail) implements Oid4VpError {
